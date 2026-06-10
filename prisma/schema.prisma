@@ -1,0 +1,88 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// File: prisma/schema.prisma
+// Architecture: Enterprise-Grade Relational Schema for AWLR Command Center
+// ─────────────────────────────────────────────────────────────────────────────
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Ditambahkan: Wajib untuk sinkronisasi multi-pooler Supabase
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 🗺️ 1. TABEL REGISTRI STASIUN / TITIK POS AWLR
+// Memisahkan data stasiun agar mempermudah plotting koordinat pada GIS Map 
+// dan integrasi layer Radar BMKG tanpa duplikasi teks lokasi.
+model StationNode {
+  id          String   @id // Contoh: "WGG-01" (Pos Jembatan Wanggu), "WGG-02"
+  name        String   // Contoh: "Pos AWLR Jembatan Wanggu"
+  latitude    Float    // Koordinat geografis untuk GIS Mapping
+  longitude   Float    // Koordinat geografis untuk GIS Mapping
+  location    String   // Deskripsi lokasi fisik / administratif
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Hubungan Relasional (One-to-Many)
+  telemetryLogs  TelemetryLog[]
+  hardwareAssets HardwareAsset[]
+}
+
+// 📡 2. TABEL TELEMETRI DATA SENSOR (Optimasi Kuat untuk Time-Series)
+// Menyimpan data fusi sensor (QDY30A & A02YYUW), curah hujan, tegangan aki, dan prediksi LSTM
+model TelemetryLog {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  
+  // Relasi ke tabel StationNode
+  nodeId    String
+  station   StationNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  
+  // Parameterisasi terstandardisasi: 
+  // "TMA_HYDRO", "TMA_ULTRA", "TMA_FUSI", "CURAH_HUJAN", "PREDIKSI_LSTM", "TEGANGAN_AKI"
+  parameter String   
+  rawValue  Float    // Nilai numerik hasil ukur, fusi, atau kalkulasi model
+  unit      String   // Satuan instrumen: "m", "mm", "V"
+  status    WaterStatus @default(AMAN) // Menggunakan Postgres Enum untuk konsistensi data
+
+  // ⚡ COMPOSITE INDEXING: Kunci kecepatan loading grafik Apache ECharts!
+  // Query visualisasi real-time akan melakukan filter: WHERE nodeId = x AND timestamp >= y
+  // Tanpa composite index ini, query grafik akan melambat drastis saat baris data mencapai ratusan ribu.
+  @@index([nodeId, timestamp])
+  @@index([timestamp])
+}
+
+// ⚙️ 3. TABEL HARDWARE REGISTRY & INTEGRITY (BMN Audit & Health Monitor)
+// Tempat melacak siklus kalibrasi instrumen, penanggung jawab, dan akumulasi jam kerja alat
+model HardwareAsset {
+  assetCode        String   @id // Contoh BMN: "BMN-AWLR-WGG01-001"
+  componentName    String   // Nama perangkat: "Hydrostatic Transducer QDY30A", "Sirene MS-190"
+  modelNumber      String   // Nomor model pabrikan / spesifikasi teknis
+  installationDate DateTime @default(now())
+  operatingHours   Int      @default(0)  // Diperbarui berkala lewat MQTT heartbeat paket data
+  healthIndex      Int      @default(100) // Indikator kesehatan fisik komponen (0-100%)
+  nextCalibration  DateTime // Tanggal jatuh tempo kalibrasi ulang wajib instrumen
+  technician       String   // Penanggung jawab teknis (Contoh: Faisal Fardani)
+  criticality      AssetLevel @default(MEDIUM) // Level kepentingan instrumen terhadap sistem EWS
+  isActive         Boolean  @default(true)
+  
+  // Relasi penempatan instrumen pada stasiun tertentu
+  nodeId           String
+  station          StationNode @relation(fields: [nodeId], references: [id], onDelete: Restrict)
+}
+
+// 📑 POSTGRES ENUMS: Menjamin validitas data di tingkat database
+enum WaterStatus {
+  AMAN
+  WASPADA
+  SIAGA
+  AWAS
+}
+
+enum AssetLevel {
+  HIGH
+  MEDIUM
+  LOW
+}

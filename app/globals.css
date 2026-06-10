@@ -1,26 +1,275 @@
-@import "tailwindcss";
+/* ─────────────────────────────────────────────────────────────────────────────
+   app/globals.css — Global styles, CSS custom properties, and Tailwind directives
+   ───────────────────────────────────────────────────────────────────────────── */
+@import 'leaflet/dist/leaflet.css';
 
+/* Custom scrollbar untuk pop-up dsb jika diperlukan */
+.leaflet-popup-content-wrapper {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(12px);
+  color: #f1f5f9 !important;
+  border-radius: 12px !important;
+}
+.leaflet-popup-tip {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Custom Properties ──────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colors (matches tailwind.config.ts) */
+  --color-bg-primary:   #0B1220;
+  --color-bg-surface:   #111827;
+  --color-bg-card:      #172033;
+  --color-bg-elevated:  #1E2A3A;
+  --color-border:       #243042;
+  --color-primary:      #3B82F6;
+  --color-text-primary: #F9FAFB;
+  --color-text-muted:   #9CA3AF;
+
+  /* Glassmorphism surface */
+  --glass-bg: rgba(23, 32, 51, 0.7);
+  --glass-border: rgba(36, 48, 66, 0.8);
+  --glass-blur: 12px;
+
+  /* EWS Status */
+  --ews-aman:    #10B981;
+  --ews-waspada: #F59E0B;
+  --ews-siaga:   #F97316;
+  --ews-awas:    #EF4444;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* ── Base Layer ─────────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Monospaced numbers for sensor data */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg-surface);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3B82F6;
+  }
+
+  /* Remove default focus outline, use custom */
+  *:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.6);
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Component Layer ────────────────────────────────────────────────────────── */
+@layer components {
+
+  /* Glass card base */
+  .glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+
+  /* Metric card base */
+  .metric-card {
+    @apply glass-card rounded-card p-4 relative overflow-hidden;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.04);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .metric-card:hover {
+    @apply border-border-accent;
+    box-shadow: 0 4px 32px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  /* Sensor value display */
+  .sensor-value {
+    @apply font-mono text-3xl font-bold text-text-primary;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* EWS status chip */
+  .ews-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+           text-xs font-bold uppercase tracking-widest border font-mono;
+  }
+
+  /* Section header bar */
+  .section-header {
+    @apply flex items-center gap-2 mb-4;
+  }
+
+  .section-header::before {
+    content: '';
+    @apply block w-1 h-5 rounded-full bg-primary;
+  }
+
+  /* Data row in tables */
+  .data-row {
+    @apply flex items-center justify-between py-2.5
+           border-b border-border/50 last:border-0;
+  }
+
+  /* Status dot */
+  .status-dot {
+    @apply w-2 h-2 rounded-full inline-block;
+  }
+
+  /* Navigation item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-card text-sm
+           text-text-secondary transition-all duration-150 cursor-pointer
+           hover:text-text-primary hover:bg-white/[0.04] select-none;
+  }
+
+  .nav-item.active {
+    @apply text-primary bg-primary/10 border border-primary/20;
+  }
+
+  /* Top gradient separator line */
+  .gradient-line {
+    @apply w-full h-px;
+    background: linear-gradient(90deg, transparent, rgba(59,130,246,0.4), transparent);
+  }
+
+  /* Recharts / ECharts dark theme override */
+  .echarts-container canvas {
+    border-radius: 8px;
+  }
+}
+
+/* ── Utility Layer ──────────────────────────────────────────────────────────── */
+@layer utilities {
+
+  /* Text gradients */
+  .text-gradient-blue {
+    background: linear-gradient(135deg, #3B82F6, #60A5FA);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-green {
+    background: linear-gradient(135deg, #10B981, #34D399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Glow text */
+  .glow-blue {
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+  }
+
+  .glow-green {
+    text-shadow: 0 0 20px rgba(16, 185, 129, 0.8);
+  }
+
+  /* Animated gradient border */
+  .border-gradient {
+    position: relative;
+  }
+  .border-gradient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(59,130,246,0.3), transparent, rgba(59,130,246,0.1));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Clip text for sensor labels */
+  .truncate-sensor {
+    @apply truncate max-w-[120px];
+  }
+}
+
+/* ── Leaflet Dark Theme Override ────────────────────────────────────────────── */
+.leaflet-container {
+  background: #0d1a2a !important;
+  font-family: var(--font-inter), sans-serif;
+}
+
+.leaflet-tile {
+  filter: brightness(0.4) saturate(0.4) hue-rotate(200deg) !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(11, 18, 32, 0.8) !important;
+  color: #6B7280 !important;
+  font-size: 9px !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(23, 32, 51, 0.95) !important;
+  border: 1px solid rgba(36, 48, 66, 0.9) !important;
+  color: #F9FAFB !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(23, 32, 51, 0.95) !important;
+}
+
+/* ── ECharts Theme ──────────────────────────────────────────────────────────── */
+.echarts-for-react {
+  height: 100% !important;
+}
+/* Tambahkan di baris paling bawah globals.css */
+.custom-datetime::-webkit-calendar-picker-indicator {
+  filter: invert(1) hue-rotate(180deg) brightness(1.5);
+  cursor: pointer;
+  opacity: 0.6;
+}
+.custom-datetime::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
