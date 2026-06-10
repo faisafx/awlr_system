@@ -257,7 +257,7 @@ export default function GISMap() {
       </MapContainer>
 
       {/* ── INJEKSI CSS KHUSUS UNTUK POPUP LEAFLET AGAR SESUAI TEMA ── */}
-      <style dangerouslySetInlineStyle={{__html: `
+      <style dangerouslySetInnerHTML={{__html: `
         /* Overrides Leaflet Popup Default Styles for Tactical Look */
         .tactical-popup .leaflet-popup-content-wrapper {
           background: rgba(15, 23, 42, 0.95);
