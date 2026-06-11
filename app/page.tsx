@@ -48,7 +48,7 @@ interface TelemetryState {
   tmaHydrostatic: number; // QDY30A (meter)
   tmaUltrasonic: number;  // A02YYUW (meter)
   deviation: number;      // Selisih antara kedua sensor (meter)
-  rainRate: number;       // Ombrometer (mm/jam)
+  rainRate: number;       // Ombrometer (mm)
   batteryVoltage: number; // Status Aki (Volt)
   solarCurrent: number;   // Status Panel Surya (Ampere)
   loraRssi: number;       // Kekuatan Sinyal (dBm)
@@ -61,7 +61,7 @@ const MQTT_TOPIC = 'awlr/wanggu/sensor';
 
 export default function CommandCenter() {
   const [data, setData] = useState<TelemetryState>({
-    tmaHydrostatic: 0.00, // Sementara 0 karena nunggu sensor tekanan dipasang
+    tmaHydrostatic: 0.00, // Sementara 0 karena menunggu sensor tekanan dipasang
     tmaUltrasonic: 0.00,
     deviation: 0.00,
     rainRate: 0.0,
@@ -81,8 +81,8 @@ export default function CommandCenter() {
     // Koneksi menggunakan Kredensial Baru Anda
     clientRef.current = mqtt.connect(MQTT_BROKER, {
       clientId,
-      username: 'faisal',       // Username Baru Anda
-      password: 'faisalwibu11', // Password Baru Anda
+      username: 'faisal',       
+      password: 'faisalwibu11', 
       clean: true,
       connectTimeout: 5000,
       reconnectPeriod: 2000,
@@ -115,15 +115,13 @@ export default function CommandCenter() {
           setData((prev) => {
             const newData = { ...prev };
 
-            // Cek isi parameter dari payload ESP32 Anda
-            if (payload.parameter.includes('Ultrasonik')) {
+            // Penyesuaian filter agar cocok dengan format database relasional Supabase yang baru
+            if (payload.parameter === 'TMA_ULTRA' || payload.parameter.includes('Ultrasonik')) {
               // Konversi dari CM (ESP32) ke METER (Standard Web)
               newData.tmaUltrasonic = Number((payload.rawValue / 100).toFixed(2));
-              
-              // Langsung ambil status kebencanaan dari kalkulasi ESP32
               newData.ewsStatus = payload.status || 'AMAN';
             } 
-            else if (payload.parameter.includes('Curah Hujan')) {
+            else if (payload.parameter === 'CURAH_HUJAN' || payload.parameter.includes('Ombrometer')) {
               newData.rainRate = Number(payload.rawValue) || 0;
             }
 
@@ -168,7 +166,7 @@ export default function CommandCenter() {
             </div>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-100 mt-2">
-            Command Center Utama <span className="text-slate-500 font-light">| Sungai Wanggu</span>
+            Command Center Utama <span className="text-slate-500 font-light">| Pos WGG-01</span>
           </h1>
         </div>
 
@@ -176,7 +174,7 @@ export default function CommandCenter() {
         <div className="flex items-center gap-3 bg-slate-900/40 p-2 rounded-xl border border-white/5 backdrop-blur-md">
           <div className="text-right px-2">
             <span className="block text-[10px] uppercase font-bold tracking-wider text-slate-500">Status Kebencanaan</span>
-            <span className="text-[11px] font-mono text-slate-400">Pembaruan: {lastUpdated} WITA</span>
+            <span className="text-[11px] font-mono text-slate-400">Pembaruan: {lastUpdated}</span>
           </div>
           
           <div className={cn(
@@ -289,14 +287,16 @@ export default function CommandCenter() {
       {/* ── BARIS 3 & 4: Visualizer, ECharts, GIS Map ──────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         
-        {/* Panel Kiri: 3D Array Viewport (SketchUp Style) */}
+        {/* Panel Kiri: 3D Array Viewport (SketchUp Style Priority) */}
         <div className="lg:col-span-4 h-[420px] rounded-xl bg-slate-900/40 border border-white/5 overflow-hidden flex flex-col backdrop-blur-md">
           <div className="p-4 border-b border-white/5 flex items-center justify-between bg-slate-950/20">
             <div>
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-300">Topografi Sensor Array</h2>
               <p className="text-[10px] text-slate-500 font-mono">Skema Peletakan Elemen Struktur</p>
             </div>
-            <span className="text-[9px] font-mono bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-white/5">CAD VIEW</span>
+            <span className="text-[9px] font-bold tracking-widest bg-slate-800 text-teal-400 px-2 py-0.5 rounded border border-teal-500/30">
+              SKETCHUP / CAD VIEW
+            </span>
           </div>
           <div className="flex-1 relative">
             <StationVisualizer />
