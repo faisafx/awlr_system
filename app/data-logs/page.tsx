@@ -30,32 +30,47 @@ export default function DataExplorerPage() {
   const [selectedParam, setSelectedParam] = useState('all');
 
   // ── 2. Handle Pencarian Data Asli dari Supabase ─────────────────────────────
+  // ── 2. Handle Pencarian Data Asli dari Supabase ─────────────────────────────
   const handleExecuteQuery = async () => {
     setIsQuerying(true);
     
     try {
-      // Memanggil API Endpoint yang terhubung ke PostgreSQL
       const response = await fetch(`/api/logs?parameter=${selectedParam}`);
       const result = await response.json();
 
       if (result.success && result.data) {
         // Konversi data mentah database ke format UI yang cantik
-        const formattedData: TelemetryLog[] = result.data.map((item: any) => ({
-          timestamp: new Date(item.timestamp).toLocaleString('id-ID', { timeZone: 'Asia/Makassar' }) + ' WITA',
-          nodeId: item.nodeId,
-          // Mengembalikan nama parameter teknis agar mudah dibaca
-          parameter: item.parameter === 'TMA_ULTRA' ? 'A02YYUW (Ultrasonic)' : 
-                     item.parameter === 'CURAH_HUJAN' ? 'Ombrometer (Rainfall)' : 
-                     item.parameter === 'TMA_HYDRO' ? 'QDY30A (Hydrostatic)' : item.parameter,
-          rawValue: `${item.rawValue} ${item.unit}`,
-          status: item.status,
-        }));
+        const formattedData: TelemetryLog[] = result.data.map((item: any) => {
+          // Paksa formatter waktu tingkat tinggi agar detik lenyap!
+          const timeString = new Date(item.timestamp).toLocaleString('id-ID', { 
+            timeZone: 'Asia/Makassar',
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }).replace(/\./g, ':'); // Ubah titik jadi titik dua (21.28 -> 21:28)
+
+          return {
+            timestamp: `${timeString} WITA`,
+            nodeId: item.nodeId,
+            parameter: item.parameter === 'TMA_ULTRA' ? 'A02YYUW (Ultrasonic)' : 
+                       item.parameter === 'CURAH_HUJAN' ? 'Ombrometer (Rainfall)' : 
+                       item.parameter === 'TMA_HYDRO' ? 'QDY30A (Hydrostatic)' : item.parameter,
+            rawValue: `${item.rawValue} ${item.unit}`,
+            status: item.status,
+          };
+        });
         
         setLogs(formattedData);
+      } else {
+        console.error("Vercel API Error:", result.error);
+        alert(`Gagal mengambil data: ${result.error}`);
       }
     } catch (error) {
       console.error("Gagal menarik data dari server:", error);
-      alert("Koneksi ke pangkalan data terputus. Periksa jaringan Anda.");
+      alert("Koneksi ke API Vercel terputus. Pastikan file API sudah ter-deploy.");
     } finally {
       setIsQuerying(false);
     }
