@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     let responseText = response.text || "";
 
     // Intercept WhatsApp Intent
-    const waMatch = responseText.match(/\[KIRIM_WA:\s*(.*?)\]/is);
+    const waMatch = responseText.match(/\[KIRIM_WA:\s*([\s\S]*?)\]/i);
     if (waMatch) {
       const waMessage = waMatch[1].trim() + "\n\n_(Pesan ini dikirim oleh Operator melalui AI Assistant Command Center)_";
       
