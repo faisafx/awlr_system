@@ -304,47 +304,93 @@ const GaugeWidget = ({ value, max, label, color, unit }: any) => {
   );
 };
 
-// ── AI Assist Panel ───────────────────────────────────────────────────────────
+// -- AI Assist Panel --
 
-function AiAssistPanel({ telemetry, ewsLabel }: { telemetry: TelemetryState; ewsLabel: string }) {
+interface AiMessageWithTime extends AiMessage {
+  timestamp?: string;
+}
+
+function AiAssistPanel({ telemetry, ewsLabel, ewsStatus }: { telemetry: TelemetryState; ewsLabel: string; ewsStatus: string }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<AiMessage[]>([]);
+  const [messages, setMessages] = useState<AiMessageWithTime[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('gemini-flash-latest');
+  const [selectedModel, setSelectedModel] = useState('gemini-2.0-flash');
   const bottomRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const prevTmaRef = useRef<number>(telemetry.tmaHydrostatic);
+  const [tmaTrend, setTmaTrend] = useState<'naik' | 'turun' | 'stabil'>('stabil');
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const prev = prevTmaRef.current;
+    const curr = telemetry.tmaHydrostatic;
+    const diff = curr - prev;
+    if (Math.abs(diff) > 0.005) setTmaTrend(diff > 0 ? 'naik' : 'turun');
+    else setTmaTrend('stabil');
+    prevTmaRef.current = curr;
+  }, [telemetry.tmaHydrostatic]);
 
-  const SYSTEM_PROMPT = `Kamu adalah "TERAWANG", asisten hidrologi pintar, asik, dan sedikit humoris untuk Pos WGG-01 Sungai Wanggu (BBWS Sulawesi IV).
-Gayamu santai, elegan, tidak terlalu kaku, dan seru diajak bercanda, TAPI kamu tetap SANGAT PROFESIONAL dan serius saat membahas bahaya banjir atau data teknis penting.
-Gunakan bahasa Indonesia sehari-hari, sedikit gaul (contoh: 'aku', 'kamu', 'nih', 'yuk') jika konteksnya santai, tapi langsung ganti ke mode waspada/darurat jika status EWS sedang bahaya.
+  const now = new Date().toLocaleString('id-ID', { weekday: 'long', hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'long', year: 'numeric' });
+  const batteryStatus = telemetry.batteryVoltage < 11.5 ? 'KRITIS' : telemetry.batteryVoltage < 12.0 ? 'RENDAH' : 'NORMAL';
 
-Konteks telemetri saat ini:
-- TMA Ultrasonik: ${telemetry.tmaUltrasonic.toFixed(2)} m
-- TMA Hidrostatik: ${telemetry.tmaHydrostatic.toFixed(2)} m
-- Debit Sungai: ${telemetry.discharge.toFixed(2)} m³/s
-- Kecepatan Arus: ${telemetry.velocity.toFixed(2)} m/s
-- Intensitas Hujan: ${telemetry.rainRate.toFixed(1)} mm/jam
-- Status EWS: ${ewsLabel}
-- Baterai: ${telemetry.batteryVoltage.toFixed(1)} V
+  const SYSTEM_PROMPT = `Kamu adalah TERAWANG, asisten hidrologi cerdas milik Balai Wilayah Sungai Sulawesi IV untuk Pos WGG-01 Sungai Wanggu, Kendari.
 
-Jika operator menyuruh mengirim pesan peringatan ke WhatsApp, kamu WAJIB menyertakan tag khusus ini di awal atau akhir jawaban:
-[KIRIM_WA: isi pesan yang akan dikirim ke WhatsApp]
+=== IDENTITAS ===
+- Nama: TERAWANG (Telemetri Real-time Analisis Wanggu Nusantara)
+- Gaya: Santai dan sedikit humoris saat AMAN, tapi langsung serius saat EWS WASPADA ke atas.
+- Bahasa: Indonesia campuran formal dan gaul yang elegan.
+- Saat SIAGA/AWAS: TIDAK boleh bercanda. Respons harus SINGKAT, ACTIONABLE.
 
-Jawab dengan asik, informatif, dan langsung ke intinya!`;
+=== PROFIL STASIUN ===
+- Stasiun: Pos WGG-01 Sungai Wanggu | Kode BMN: BMN-AWLR-WGG01
+- Koordinat: -4.0175 S, 122.5152 E | DAS Wanggu, Kota Kendari | DTA: ~124 km persegi
+- Instansi: BBWS Sulawesi IV / Ditjen SDA PUPR
+- Waktu saat ini: ${now}
+
+=== TELEMETRI REAL-TIME ===
+- TMA Ultrasonik   : ${telemetry.tmaUltrasonic.toFixed(3)} m
+- TMA Hidrostatik  : ${telemetry.tmaHydrostatic.toFixed(3)} m (sensor utama)
+- Deviasi Sensor   : ${telemetry.deviation.toFixed(3)} m ${telemetry.deviation > 0.15 ? '-- DEVIASI TINGGI! Kemungkinan sensor kotor/rusak.' : '(Normal)'}
+- Trend TMA        : ${tmaTrend.toUpperCase()}
+- Debit Sungai     : ${telemetry.discharge.toFixed(3)} m3 per detik
+- Kecepatan Arus   : ${telemetry.velocity.toFixed(3)} m/s ${telemetry.velocity > 1.5 ? '-- Arus deras!' : ''}
+- Curah Hujan      : ${telemetry.rainRate.toFixed(1)} mm/jam ${telemetry.rainRate > 50 ? '(EKSTREM)' : telemetry.rainRate > 20 ? '(Lebat)' : ''}
+- Flowmeter 1/2    : ${telemetry.flowRate1.toFixed(1)} / ${telemetry.flowRate2.toFixed(1)} L/menit
+- Baterai          : ${telemetry.batteryVoltage.toFixed(1)} V -- Status: ${batteryStatus}
+- Relay Sirene     : ${telemetry.relay1Siren ? 'AKTIF' : 'Standby'}
+- Relay Alarm      : ${telemetry.relay2Alarm ? 'AKTIF' : 'Standby'}
+
+=== STATUS EWS: ${ewsStatus} -- ${ewsLabel} ===
+
+=== AMBANG BATAS EWS (STANDAR PUPR) ===
+Siaga IV AMAN     : TMA < 2.00 m
+Siaga III WASPADA : TMA >= 2.00 m -- Pantau ketat
+Siaga II SIAGA    : TMA >= 2.80 m -- Siapkan evakuasi
+Siaga I AWAS      : TMA >= 3.50 m -- EVAKUASI SEGERA
+
+=== INSTRUKSI PERILAKU ===
+Status saat ini adalah ${ewsStatus}:
+${ewsStatus === 'AMAN' ? 'Mode NORMAL: Boleh santai dan sedikit bercanda. Berikan analisis mendalam dan edukatif.' : ewsStatus === 'WASPADA' ? 'Mode WASPADA: Serius tapi tenang. Berikan estimasi kenaikan TMA. Tidak bercanda.' : ewsStatus === 'SIAGA' ? 'Mode SIAGA: Darurat terkendali. Langkah konkret evakuasi. Respons padat dan actionable.' : 'Mode DARURAT TOTAL: Respons singkat dan tegas. Hanya info penting penyelamat jiwa.'}
+
+=== FORMAT ===
+- Gunakan bold (**teks**) untuk angka dan istilah penting
+- Gunakan bullet list untuk rekomendasi
+- Selalu akhiri dengan satu rekomendasi tindakan utama
+- Panjang: AMAN=bebas, WASPADA=max 200 kata, SIAGA/AWAS=max 100 kata
+
+=== KEMAMPUAN KHUSUS ===
+Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
 
   async function send() {
     const q = input.trim();
     if (!q || loading) return;
     setInput('');
-    const next: AiMessage[] = [...messages, { role: 'user', content: q }];
+    const ts = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    const next: AiMessageWithTime[] = [...messages, { role: 'user', content: q, timestamp: ts }];
     setMessages(next);
     setLoading(true);
-
     try {
       const res = await fetch('/api/ai-assist', {
         method: 'POST',
@@ -352,9 +398,10 @@ Jawab dengan asik, informatif, dan langsung ke intinya!`;
         body: JSON.stringify({ systemPrompt: SYSTEM_PROMPT, messages: next, selectedModel }),
       });
       const data = await res.json();
-      setMessages([...next, { role: 'assistant', content: data.content ?? 'Gagal mendapat respons.' }]);
+      const aiTs = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      setMessages([...next, { role: 'assistant', content: data.content ?? 'Gagal mendapat respons.', timestamp: aiTs }]);
     } catch {
-      setMessages([...next, { role: 'assistant', content: 'Koneksi ke AI gagal. Periksa koneksi internet.' }]);
+      setMessages([...next, { role: 'assistant', content: 'Koneksi ke AI gagal. Periksa koneksi internet.', timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) }]);
     } finally {
       setLoading(false);
     }
@@ -364,27 +411,46 @@ Jawab dengan asik, informatif, dan langsung ke intinya!`;
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const quickPrompts = [
-    'Berdasarkan curah hujan saat ini, estimasi waktu sebelum luapan?',
-    'Analisis korelasi debit air dan TMA saat ini.',
-    'Apakah kecepatan arus sungai melampaui batas aman?',
+  const quickPrompts: { label: string; q: string }[] = ewsStatus === 'AWAS' ? [
+    { label: 'Kirim WA Darurat Sekarang', q: 'Buat dan kirim pesan peringatan darurat banjir ke WhatsApp warga sekarang!' },
+    { label: 'Berapa Waktu Tersisa?', q: 'Berapa lama lagi sebelum air masuk ke permukiman berdasarkan data saat ini?' },
+    { label: 'Protokol Evakuasi Darurat', q: 'Apa langkah evakuasi darurat yang harus diambil sekarang?' },
+  ] : ewsStatus === 'SIAGA' ? [
+    { label: 'Analisis Risiko Banjir', q: 'Analisis risiko banjir saat ini, apakah kemungkinan naik ke status AWAS?' },
+    { label: 'Buat Notifikasi Warga', q: 'Bantu buat pesan peringatan untuk dikirim ke warga sekitar sungai.' },
+    { label: 'Proyeksi Level TMA', q: 'Berdasarkan curah hujan dan trend TMA, kapan bisa capai ambang AWAS?' },
+  ] : ewsStatus === 'WASPADA' ? [
+    { label: 'Analisis Trend TMA', q: 'Apakah air cenderung terus naik? Estimasi waktu ke level SIAGA?' },
+    { label: 'Dampak Curah Hujan', q: 'Berapa besar dampak curah hujan saat ini terhadap kenaikan TMA?' },
+    { label: 'Cek Deviasi Sensor', q: `Deviasi sensor saat ini ${telemetry.deviation.toFixed(3)} m. Apakah ini wajar atau ada masalah?` },
+  ] : [
+    { label: 'Analisis Kondisi Sungai', q: 'Analisis korelasi debit air dan TMA saat ini. Apakah semua normal?' },
+    { label: 'Estimasi Waktu Banjir', q: 'Berdasarkan curah hujan saat ini, estimasi waktu sebelum luapan jika hujan tidak berhenti?' },
+    { label: 'Cek Kesehatan Sistem', q: `Baterai ${telemetry.batteryVoltage.toFixed(1)}V, deviasi sensor ${telemetry.deviation.toFixed(3)}m. Apakah sistem dalam kondisi sehat?` },
   ];
+
+  const ewsColors: Record<string, { ring: string; badge: string; bg: string; text: string }> = {
+    AMAN:    { ring: 'rgba(74,222,128,0.5)',  badge: '#4ADE80', bg: 'var(--ews-aman-bg)',    text: 'var(--ews-aman)' },
+    WASPADA: { ring: 'rgba(251,191,36,0.5)',  badge: '#FBBF24', bg: 'var(--ews-waspada-bg)', text: 'var(--ews-waspada)' },
+    SIAGA:   { ring: 'rgba(251,146,60,0.5)',  badge: '#FB923C', bg: 'var(--ews-siaga-bg)',   text: 'var(--ews-siaga)' },
+    AWAS:    { ring: 'rgba(248,113,113,0.6)', badge: '#F87171', bg: 'var(--ews-awas-bg)',    text: 'var(--ews-awas)' },
+  };
+  const ec = ewsColors[ewsStatus] ?? ewsColors.AMAN;
 
   if (!mounted) return null;
 
   return createPortal(
     <>
-      {/* Floating Action Button (Bubble) */}
+      {/* Floating Button with EWS Pulse */}
       <button
         onClick={() => setOpen(o => !o)}
         className="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center cursor-pointer z-[9999]"
         style={{
-          background: 'var(--brand-600)',
-          color: 'white',
-          border: 'none',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+          background: 'var(--brand-600)', color: 'white', border: 'none',
           transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           transform: open ? 'scale(0.9) rotate(15deg)' : 'scale(1) rotate(0deg)',
+          animation: (ewsStatus === 'AWAS' || ewsStatus === 'SIAGA') && !open ? 'ewsPulse 1.8s ease-out infinite' : 'none',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
         }}
         aria-label="Tanya AI Hidrologi"
       >
@@ -393,97 +459,96 @@ Jawab dengan asik, informatif, dan langsung ke intinya!`;
 
       {/* Floating Chat Window */}
       <div
-        className="fixed bottom-[88px] right-6 md:bottom-[112px] md:right-8 w-[calc(100vw-48px)] md:w-[380px] h-[500px] md:h-[540px] max-h-[calc(100vh-120px)] rounded-2xl flex flex-col z-[9998] overflow-hidden"
+        className="fixed bottom-[88px] right-6 md:bottom-[108px] md:right-8 w-[calc(100vw-48px)] md:w-[400px] h-[calc(100dvh-120px)] md:h-[570px] max-h-[600px] rounded-2xl flex flex-col z-[9998] overflow-hidden"
         style={{
-          background: 'var(--surface-card)',
-          border: '1px solid var(--border-subtle)',
-          boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
-          opacity: open ? 1 : 0,
-          pointerEvents: open ? 'auto' : 'none',
+          background: 'var(--surface-card)', border: '1px solid var(--border-subtle)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.45)',
+          opacity: open ? 1 : 0, pointerEvents: open ? 'auto' : 'none',
           transform: open ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
           transformOrigin: 'bottom right',
           transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         }}
       >
-        {/* Header (Glassmorphism & Model Selector) */}
-        <div style={{ 
-          padding: '20px', 
-          background: 'linear-gradient(135deg, rgba(37,99,235,0.95) 0%, rgba(30,58,138,0.9) 100%)', 
-          backdropFilter: 'blur(10px)', 
-          borderBottom: '1px solid rgba(255,255,255,0.1)', 
-          color: 'white', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          zIndex: 10 
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <div style={{ width: '40px', height: '40px', borderRadius: '20px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-              <Bot size={20} />
+        {/* Header */}
+        <div style={{ padding: '13px 16px', background: 'linear-gradient(135deg, rgba(37,99,235,0.95) 0%, rgba(30,58,138,0.9) 100%)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.2)', flexShrink: 0 }}>
+              <Bot size={18} />
             </div>
             <div>
-              <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.2 }}>TERAWANG AI</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '3px', background: '#4ADE80', boxShadow: '0 0 8px rgba(74, 222, 128, 0.6)', animation: 'pulse 2s infinite' }}></span>
-                <span style={{ fontSize: '9px', fontWeight: 700, opacity: 0.9, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                  Online
-                </span>
+              <div style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '-0.01em' }}>TERAWANG AI</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '3px' }}>
+                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#4ADE80', boxShadow: '0 0 6px rgba(74,222,128,0.7)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
+                <span style={{ fontSize: '8px', fontWeight: 700, opacity: 0.85, letterSpacing: '0.07em', textTransform: 'uppercase' }}>Online</span>
+                <span style={{ fontSize: '8px', fontWeight: 700, color: ec.badge, background: 'rgba(0,0,0,0.2)', padding: '1px 6px', borderRadius: '99px', border: `1px solid ${ec.badge}40`, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{ewsStatus}</span>
               </div>
             </div>
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+            <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)} style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)', fontSize: '9px', fontWeight: 600, padding: '4px 22px 4px 8px', borderRadius: '8px', outline: 'none', cursor: 'pointer', fontFamily: 'var(--font-jetbrains), monospace', appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 5px center', backgroundSize: '10px' }}>
+              <option value="gemini-2.0-flash">Flash 2.0</option>
+              <option value="gemini-flash-latest">Flash (Cepat)</option>
+              <option value="gemini-1.5-pro">Pro (Analitik)</option>
+            </select>
+            <button onClick={() => setMessages([])} title="Reset chat" style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <RefreshCw size={13} />
+            </button>
+            <button onClick={() => setOpen(false)} style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <X size={14} />
+            </button>
+          </div>
         </div>
 
+        {/* EWS Banner */}
+        {ewsStatus !== 'AMAN' && (
+          <div style={{ padding: '7px 16px', background: ec.bg, borderBottom: `1px solid ${ec.ring}`, display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <ShieldAlert size={12} style={{ color: ec.text, flexShrink: 0 }} />
+            <span style={{ fontSize: '10px', fontWeight: 700, color: ec.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {ewsStatus === 'AWAS' ? 'KONDISI DARURAT � TMA melebihi ambang AWAS!' : ewsStatus === 'SIAGA' ? 'SIAGA AKTIF � TMA mendekati batas kritis!' : 'STATUS WASPADA � Pantau perkembangan TMA!'}
+            </span>
+          </div>
+        )}
+
         {/* Chat Body */}
-        <div className="scrollbar-hide" style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', background: 'var(--surface-bg)' }}>
+        <div className="scrollbar-hide" style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--surface-bg)' }}>
           {messages.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '20px 0', marginTop: 'auto', marginBottom: 'auto' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '32px', background: 'var(--surface-inset)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <Sparkles size={32} style={{ color: 'var(--brand-500)' }} />
+            <div style={{ textAlign: 'center', padding: '8px 0', marginTop: 'auto', marginBottom: 'auto' }}>
+              <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: 'var(--surface-inset)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', border: '1px solid var(--border-subtle)' }}>
+                <Sparkles size={24} style={{ color: 'var(--brand-500)' }} />
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '20px' }}>
-                Halo! Saya adalah Asisten Hidrologi Pos WGG-01. Ada yang bisa saya bantu terkait analisis kondisi sungai saat ini?
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: '16px' }}>
+                Halo! Saya <strong style={{ color: 'var(--text-primary)' }}>TERAWANG</strong> � Asisten Hidrologi Pos WGG-01.<br/>
+                Saya memahami konteks telemetri dan EWS secara real-time!
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {quickPrompts.map(q => (
-                  <button
-                    key={q}
-                    onClick={() => { setInput(q); }}
-                    style={{
-                      fontSize: '11px', padding: '10px 16px', borderRadius: '12px', cursor: 'pointer',
-                      background: 'var(--surface-card)', color: 'var(--brand-500)',
-                      border: '1px solid var(--border-subtle)', fontFamily: 'inherit',
-                      textAlign: 'left', transition: 'all 0.2s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-inset)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-card)'; }}
-                  >
-                    {q}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                {quickPrompts.map(({ label, q }) => (
+                  <button key={label} onClick={() => setInput(q)} style={{ fontSize: '11px', padding: '9px 14px', borderRadius: '12px', cursor: 'pointer', background: 'var(--surface-card)', color: 'var(--brand-500)', border: '1px solid var(--border-subtle)', fontFamily: 'inherit', textAlign: 'left', transition: 'all 0.2s' }} onMouseEnter={e => { e.currentTarget.style.background = 'var(--surface-inset)'; e.currentTarget.style.borderColor = 'var(--brand-300)'; }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--surface-card)'; e.currentTarget.style.borderColor = 'var(--border-subtle)'; }}>
+                    {label}
                   </button>
                 ))}
               </div>
             </div>
           )}
-
           {messages.map((m, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: m.role === 'user' ? 'row-reverse' : 'row', gap: '12px', alignItems: 'flex-end' }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: m.role === 'user' ? 'var(--brand-600)' : 'var(--surface-inset)', border: '1px solid var(--border-subtle)', marginBottom: '4px' }}>
-                {m.role === 'user' ? <span style={{ fontSize: '10px', color: 'white', fontWeight: 800 }}>OP</span> : <Bot size={14} style={{ color: 'var(--text-secondary)' }} />}
+            <div key={i} style={{ display: 'flex', flexDirection: m.role === 'user' ? 'row-reverse' : 'row', gap: '10px', alignItems: 'flex-end' }}>
+              <div style={{ width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: m.role === 'user' ? 'var(--brand-600)' : 'var(--surface-inset)', border: '1px solid var(--border-subtle)', marginBottom: '16px' }}>
+                {m.role === 'user' ? <span style={{ fontSize: '9px', color: 'white', fontWeight: 800 }}>OP</span> : <Bot size={13} style={{ color: 'var(--text-secondary)' }} />}
               </div>
-              <div style={{ maxWidth: '75%', padding: '12px 16px', borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: m.role === 'user' ? 'var(--brand-600)' : 'var(--surface-card)', border: '1px solid', borderColor: m.role === 'user' ? 'transparent' : 'var(--border-subtle)', fontSize: '13px', lineHeight: 1.6, color: m.role === 'user' ? 'white' : 'var(--text-primary)', whiteSpace: 'pre-wrap', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                {m.content}
+              <div style={{ maxWidth: '78%' }}>
+                <div style={{ padding: '10px 14px', borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: m.role === 'user' ? 'var(--brand-600)' : 'var(--surface-card)', border: '1px solid', borderColor: m.role === 'user' ? 'transparent' : 'var(--border-subtle)', fontSize: '12px', lineHeight: 1.65, color: m.role === 'user' ? 'white' : 'var(--text-primary)', whiteSpace: 'pre-wrap', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                  {m.content}
+                </div>
+                {m.timestamp && <div style={{ fontSize: '9px', color: 'var(--text-disabled)', marginTop: '3px', textAlign: m.role === 'user' ? 'right' : 'left', fontFamily: 'var(--font-jetbrains), monospace' }}>{m.timestamp}</div>}
               </div>
             </div>
           ))}
-
           {loading && (
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
-              <div style={{ width: '28px', height: '28px', borderRadius: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-inset)', border: '1px solid var(--border-subtle)', marginBottom: '4px' }}>
-                <Bot size={14} style={{ color: 'var(--text-secondary)' }} />
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+              <div style={{ width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-inset)', border: '1px solid var(--border-subtle)', marginBottom: '16px' }}>
+                <Bot size={13} style={{ color: 'var(--text-secondary)' }} />
               </div>
-              <div style={{ padding: '12px 16px', background: 'var(--surface-card)', borderRadius: '16px 16px 16px 4px', border: '1px solid var(--border-subtle)', display: 'flex', gap: '6px' }}>
-                {[0, 1, 2].map(i => (
-                  <div key={i} style={{ width: '6px', height: '6px', borderRadius: '3px', background: 'var(--text-disabled)', animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
-                ))}
+              <div style={{ padding: '10px 16px', background: 'var(--surface-card)', borderRadius: '16px 16px 16px 4px', border: '1px solid var(--border-subtle)', display: 'flex', gap: '5px' }}>
+                {[0, 1, 2].map(i => <div key={i} style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--text-disabled)', animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />)}
               </div>
             </div>
           )}
@@ -491,70 +556,11 @@ Jawab dengan asik, informatif, dan langsung ke intinya!`;
         </div>
 
         {/* Input Area */}
-        <div style={{ padding: '12px 16px', background: 'var(--surface-card)', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          
-          {/* Model Selector (Kiri Bawah) */}
-          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <select 
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              style={{
-                background: 'var(--surface-inset)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-secondary)',
-                fontSize: '10px',
-                padding: '4px 20px 4px 10px',
-                borderRadius: '8px',
-                outline: 'none',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-jetbrains), monospace',
-                appearance: 'none',
-                backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 6px center',
-                backgroundSize: '10px',
-              }}
-            >
-              <option value="gemini-flash-latest">Gemini Flash (Cepat)</option>
-              <option value="gemini-1.5-pro">Gemini Pro (Pintar)</option>
-              <option value="gemini-2.0-flash">Gemini 2.0 (Bisa Limit)</option>
-            </select>
-          </div>
-
-          {/* Textarea & Send Button */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
-            <textarea
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder="Tulis pesan ke AI..."
-              rows={1}
-              style={{
-                flex: 1, resize: 'none', border: '1px solid var(--border-default)',
-                borderRadius: '20px', padding: '10px 16px',
-                fontSize: '13px', lineHeight: 1.5, fontFamily: 'inherit',
-                color: 'var(--text-primary)', background: 'var(--surface-inset)',
-                outline: 'none', overflowY: 'hidden', minHeight: '40px', maxHeight: '120px'
-              }}
-              onFocus={e => { e.target.style.borderColor = 'var(--brand-500)'; e.target.style.background = 'var(--surface-bg)'; }}
-              onBlur={e => { e.target.style.borderColor = 'var(--border-default)'; e.target.style.background = 'var(--surface-inset)'; }}
-            />
-            <button
-              onClick={send}
-              disabled={loading || !input.trim()}
-              style={{
-                width: '40px', height: '40px', borderRadius: '20px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: loading || !input.trim() ? 'var(--surface-inset)' : 'var(--brand-600)',
-                border: 'none',
-                cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-                flexShrink: 0, transition: 'all 0.2s',
-                boxShadow: loading || !input.trim() ? 'none' : '0 4px 12px rgba(37,99,235,0.3)',
-              }}
-            >
-              <Send size={16} style={{ color: loading || !input.trim() ? 'var(--text-disabled)' : 'white', marginLeft: '2px' }} />
-            </button>
-          </div>
+        <div style={{ padding: '10px 14px 12px', background: 'var(--surface-card)', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '10px', alignItems: 'flex-end', flexShrink: 0 }}>
+          <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={ewsStatus !== 'AMAN' ? `Status ${ewsStatus} � Tanya TERAWANG...` : 'Tulis pesan ke TERAWANG AI...'} rows={1} style={{ flex: 1, resize: 'none', border: `1px solid ${ewsStatus !== 'AMAN' ? ec.ring : 'var(--border-default)'}`, borderRadius: '18px', padding: '9px 14px', fontSize: '12px', lineHeight: 1.5, fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--surface-inset)', outline: 'none', overflowY: 'hidden', minHeight: '38px', maxHeight: '110px' }} onFocus={e => { e.target.style.borderColor = 'var(--brand-500)'; e.target.style.background = 'var(--surface-bg)'; }} onBlur={e => { e.target.style.borderColor = ewsStatus !== 'AMAN' ? ec.ring : 'var(--border-default)'; e.target.style.background = 'var(--surface-inset)'; }} />
+          <button onClick={send} disabled={loading || !input.trim()} style={{ width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: loading || !input.trim() ? 'var(--surface-inset)' : 'var(--brand-600)', border: 'none', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', flexShrink: 0, transition: 'all 0.2s', boxShadow: loading || !input.trim() ? 'none' : '0 4px 12px rgba(37,99,235,0.35)' }}>
+            <Send size={15} style={{ color: loading || !input.trim() ? 'var(--text-disabled)' : 'white', marginLeft: '2px' }} />
+          </button>
         </div>
       </div>
 
@@ -562,6 +568,11 @@ Jawab dengan asik, informatif, dan langsung ke intinya!`;
         @keyframes bounce {
           0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
           40% { transform: translateY(-4px); opacity: 1; }
+        }
+        @keyframes ewsPulse {
+          0%   { box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 0 0 rgba(248,113,113,0.6); }
+          60%  { box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 0 14px rgba(0,0,0,0); }
+          100% { box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 0 0 0 rgba(0,0,0,0); }
         }
       `}</style>
     </>,
@@ -789,7 +800,7 @@ export default function CommandCenter() {
       </div>
 
       {/* ── AI ASSIST ── */}
-      <AiAssistPanel telemetry={data} ewsLabel={ews.label} />
+      <AiAssistPanel telemetry={data} ewsLabel={ews.label} ewsStatus={data.ewsStatus} />
 
       {/* ── EWS GAUGE ── */}
       <div

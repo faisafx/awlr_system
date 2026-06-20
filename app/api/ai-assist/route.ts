@@ -27,7 +27,8 @@ export async function POST(req: Request) {
       contents: formattedMessages,
       config: {
         systemInstruction: systemPrompt,
-        temperature: 0.7, // Temperatur dinaikkan (0.7) agar AI lebih luwes, asik, dan tidak terlalu kaku
+        temperature: 0.75,
+        maxOutputTokens: 1024,
       }
     });
 
