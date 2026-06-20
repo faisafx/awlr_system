@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// ── Dynamic Imports ───────────────────────────────────────────────────────────
+// â”€â”€ Dynamic Imports â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const Spinner = ({ label }: { label: string }) => (
   <div className="h-full w-full flex flex-col items-center justify-center gap-3">
@@ -60,7 +60,7 @@ const GISMap = dynamic(() => import('@/components/map/GISMap'), {
   loading: () => <Spinner label="Menghubungkan radar BMKG..." />,
 });
 
-// ── Types & Constants ─────────────────────────────────────────────────────────
+// â”€â”€ Types & Constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface TelemetryState {
   tmaHydrostatic: number;
@@ -88,15 +88,15 @@ const MQTT_BROKER = 'wss://f06e9090.ala.asia-southeast1.emqxsl.com:8084/mqtt';
 const MQTT_TOPIC = 'awlr/wanggu/sensor';
 
 const EWS_CONFIG = {
-  AMAN: { label: 'Siaga IV — Aman', color: 'var(--ews-aman)', bg: 'var(--ews-aman-bg)', border: '#BBF7D0', dotBg: '#BBF7D0' },
-  WASPADA: { label: 'Siaga III — Waspada', color: 'var(--ews-waspada)', bg: 'var(--ews-waspada-bg)', border: '#FDE68A', dotBg: '#FDE68A' },
-  SIAGA: { label: 'Siaga II — Siaga', color: 'var(--ews-siaga)', bg: 'var(--ews-siaga-bg)', border: '#FDBA74', dotBg: '#FDBA74' },
-  AWAS: { label: 'Siaga I — Awas', color: 'var(--ews-awas)', bg: 'var(--ews-awas-bg)', border: '#FECACA', dotBg: '#FECACA' },
+  AMAN: { label: 'Siaga IV â€” Aman', color: 'var(--ews-aman)', bg: 'var(--ews-aman-bg)', border: '#BBF7D0', dotBg: '#BBF7D0' },
+  WASPADA: { label: 'Siaga III â€” Waspada', color: 'var(--ews-waspada)', bg: 'var(--ews-waspada-bg)', border: '#FDE68A', dotBg: '#FDE68A' },
+  SIAGA: { label: 'Siaga II â€” Siaga', color: 'var(--ews-siaga)', bg: 'var(--ews-siaga-bg)', border: '#FDBA74', dotBg: '#FDBA74' },
+  AWAS: { label: 'Siaga I â€” Awas', color: 'var(--ews-awas)', bg: 'var(--ews-awas-bg)', border: '#FECACA', dotBg: '#FECACA' },
 } as const;
 
 const EWS_LEVELS = ['AMAN', 'WASPADA', 'SIAGA', 'AWAS'] as const;
 
-// ── Primitive Components ──────────────────────────────────────────────────────
+// â”€â”€ Primitive Components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
@@ -126,7 +126,7 @@ function PanelHeader({ title, subtitle, action }: { title: string; subtitle: str
   );
 }
 
-// ── EWS Flood Gauge ───────────────────────────────────────────────────────────
+// â”€â”€ EWS Flood Gauge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function FloodGaugeBar({ status }: { status: keyof typeof EWS_CONFIG }) {
   const activeIdx = EWS_LEVELS.indexOf(status);
@@ -173,7 +173,7 @@ function FloodGaugeBar({ status }: { status: keyof typeof EWS_CONFIG }) {
   );
 }
 
-// ── KPI Card ──────────────────────────────────────────────────────────────────
+// â”€â”€ KPI Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function KpiCard({
   label, value, unit, icon: Icon, accentColor,
@@ -504,7 +504,7 @@ Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
           <div style={{ padding: '7px 16px', background: ec.bg, borderBottom: `1px solid ${ec.ring}`, display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
             <ShieldAlert size={12} style={{ color: ec.text, flexShrink: 0 }} />
             <span style={{ fontSize: '10px', fontWeight: 700, color: ec.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              {ewsStatus === 'AWAS' ? 'KONDISI DARURAT � TMA melebihi ambang AWAS!' : ewsStatus === 'SIAGA' ? 'SIAGA AKTIF � TMA mendekati batas kritis!' : 'STATUS WASPADA � Pantau perkembangan TMA!'}
+              {ewsStatus === 'AWAS' ? 'KONDISI DARURAT — TMA melebihi ambang AWAS!' : ewsStatus === 'SIAGA' ? 'SIAGA AKTIF — TMA mendekati batas kritis!' : 'STATUS WASPADA — Pantau perkembangan TMA!'}
             </span>
           </div>
         )}
@@ -517,7 +517,7 @@ Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
                 <Sparkles size={24} style={{ color: 'var(--brand-500)' }} />
               </div>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: '16px' }}>
-                Halo! Saya <strong style={{ color: 'var(--text-primary)' }}>TERAWANG</strong> � Asisten Hidrologi Pos WGG-01.<br/>
+                Halo! Saya <strong style={{ color: 'var(--text-primary)' }}>TERAWANG</strong> — Asisten Hidrologi Pos WGG-01.<br/>
                 Saya memahami konteks telemetri dan EWS secara real-time!
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
@@ -557,7 +557,7 @@ Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
 
         {/* Input Area */}
         <div style={{ padding: '10px 14px 12px', background: 'var(--surface-card)', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '10px', alignItems: 'flex-end', flexShrink: 0 }}>
-          <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={ewsStatus !== 'AMAN' ? `Status ${ewsStatus} � Tanya TERAWANG...` : 'Tulis pesan ke TERAWANG AI...'} rows={1} style={{ flex: 1, resize: 'none', border: `1px solid ${ewsStatus !== 'AMAN' ? ec.ring : 'var(--border-default)'}`, borderRadius: '18px', padding: '9px 14px', fontSize: '12px', lineHeight: 1.5, fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--surface-inset)', outline: 'none', overflowY: 'hidden', minHeight: '38px', maxHeight: '110px' }} onFocus={e => { e.target.style.borderColor = 'var(--brand-500)'; e.target.style.background = 'var(--surface-bg)'; }} onBlur={e => { e.target.style.borderColor = ewsStatus !== 'AMAN' ? ec.ring : 'var(--border-default)'; e.target.style.background = 'var(--surface-inset)'; }} />
+          <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={ewsStatus !== 'AMAN' ? `Status ${ewsStatus} — Tanya TERAWANG...` : 'Tulis pesan ke TERAWANG AI...'} rows={1} style={{ flex: 1, resize: 'none', border: `1px solid ${ewsStatus !== 'AMAN' ? ec.ring : 'var(--border-default)'}`, borderRadius: '18px', padding: '9px 14px', fontSize: '12px', lineHeight: 1.5, fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--surface-inset)', outline: 'none', overflowY: 'hidden', minHeight: '38px', maxHeight: '110px' }} onFocus={e => { e.target.style.borderColor = 'var(--brand-500)'; e.target.style.background = 'var(--surface-bg)'; }} onBlur={e => { e.target.style.borderColor = ewsStatus !== 'AMAN' ? ec.ring : 'var(--border-default)'; e.target.style.background = 'var(--surface-inset)'; }} />
           <button onClick={send} disabled={loading || !input.trim()} style={{ width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: loading || !input.trim() ? 'var(--surface-inset)' : 'var(--brand-600)', border: 'none', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', flexShrink: 0, transition: 'all 0.2s', boxShadow: loading || !input.trim() ? 'none' : '0 4px 12px rgba(37,99,235,0.35)' }}>
             <Send size={15} style={{ color: loading || !input.trim() ? 'var(--text-disabled)' : 'white', marginLeft: '2px' }} />
           </button>
@@ -580,7 +580,7 @@ Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function CommandCenter() {
   const [data, setData] = useState<TelemetryState>({
@@ -653,7 +653,7 @@ export default function CommandCenter() {
     return () => { clientRef.current?.end(); };
   }, []);
 
-  // ── WHATSAPP INTEGRATION ──
+  // â”€â”€ WHATSAPP INTEGRATION â”€â”€
   const dataRef = useRef(data);
   const lastEwsRef = useRef(data.ewsStatus);
 
@@ -668,7 +668,7 @@ export default function CommandCenter() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `🚨 *PERINGATAN DINI BANJIR: ${data.ewsStatus}* 🚨\n\nLokasi: Pos WGG-01 Sungai Wanggu\nTinggi Air: ${data.tmaHydrostatic.toFixed(2)} m\nDebit: ${data.discharge.toFixed(2)} m³/s\nCurah Hujan: ${data.rainRate.toFixed(1)} mm/jam\n\n⚠️ Harap warga di sekitar segera waspada dan mengambil tindakan pengamanan!`
+          message: `ðŸš¨ *PERINGATAN DINI BANJIR: ${data.ewsStatus}* ðŸš¨\n\nLokasi: Pos WGG-01 Sungai Wanggu\nTinggi Air: ${data.tmaHydrostatic.toFixed(2)} m\nDebit: ${data.discharge.toFixed(2)} mÂ³/s\nCurah Hujan: ${data.rainRate.toFixed(1)} mm/jam\n\nâš ï¸ Harap warga di sekitar segera waspada dan mengambil tindakan pengamanan!`
         })
       }).catch(err => console.error("Gagal kirim darurat WA", err));
     } else if (data.ewsStatus !== lastEwsRef.current) {
@@ -684,7 +684,7 @@ export default function CommandCenter() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `📊 *UPDATE TELEMETRI TERAWANG*\nPos WGG-01 Sungai Wanggu\n🕒 Waktu: ${new Date().toLocaleString('id-ID')}\n\n🌊 TMA: ${current.tmaHydrostatic.toFixed(2)} m\n💧 Debit: ${current.discharge.toFixed(2)} m³/s\n🌧️ Hujan: ${current.rainRate.toFixed(1)} mm/jam\nℹ️ Status EWS: *${current.ewsStatus}*\n\n_Pesan otomatis dikirim setiap 30 menit dari Command Center._`
+          message: `ðŸ“Š *UPDATE TELEMETRI TERAWANG*\nPos WGG-01 Sungai Wanggu\nðŸ•’ Waktu: ${new Date().toLocaleString('id-ID')}\n\nðŸŒŠ TMA: ${current.tmaHydrostatic.toFixed(2)} m\nðŸ’§ Debit: ${current.discharge.toFixed(2)} mÂ³/s\nðŸŒ§ï¸ Hujan: ${current.rainRate.toFixed(1)} mm/jam\nâ„¹ï¸ Status EWS: *${current.ewsStatus}*\n\n_Pesan otomatis dikirim setiap 30 menit dari Command Center._`
         })
       }).catch(err => console.error("Gagal kirim rutin WA", err));
     }, 30 * 60 * 1000); // 30 Menit = 1.800.000 ms
@@ -709,7 +709,7 @@ export default function CommandCenter() {
   return (
     <div className="flex flex-col gap-4 md:gap-5">
 
-      {/* ── COMMAND BAR ── */}
+      {/* â”€â”€ COMMAND BAR â”€â”€ */}
       <div className="card p-3 md:p-4 lg:px-5">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 md:gap-4">
 
@@ -732,7 +732,7 @@ export default function CommandCenter() {
               </div>
               <h1 className="text-lg md:text-[18px] font-bold text-[var(--text-primary)] tracking-[-0.02em] m-0">
                 TERAWANG{' '}
-                <span className="block md:inline text-[13px] md:text-[15px] mt-0.5 md:mt-0 font-normal text-[var(--text-muted)]">— Sistem Pemantauan Dini</span>
+                <span className="block md:inline text-[13px] md:text-[15px] mt-0.5 md:mt-0 font-normal text-[var(--text-muted)]">â€” Sistem Pemantauan Dini</span>
               </h1>
             </div>
           </div>
@@ -751,7 +751,7 @@ export default function CommandCenter() {
               }}
             >
               {connOk ? <Wifi size={11} /> : <WifiOff size={11} />}
-              {connOk ? 'EMQX · WSS Aktif' : connWait ? 'Menghubungkan...' : 'Terputus'}
+              {connOk ? 'EMQX Â· WSS Aktif' : connWait ? 'Menghubungkan...' : 'Terputus'}
             </div>
 
             <div
@@ -799,17 +799,17 @@ export default function CommandCenter() {
         </div>
       </div>
 
-      {/* ── AI ASSIST ── */}
+      {/* â”€â”€ AI ASSIST â”€â”€ */}
       <AiAssistPanel telemetry={data} ewsLabel={ews.label} ewsStatus={data.ewsStatus} />
 
-      {/* ── EWS GAUGE ── */}
+      {/* â”€â”€ EWS GAUGE â”€â”€ */}
       <div
         className="card"
         style={{ padding: '16px 20px' }}
       >
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.1em] text-[var(--text-muted)] uppercase">
-            Ambang Batas EWS — Standar PUPR
+            Ambang Batas EWS â€” Standar PUPR
           </span>
           <span className="text-[9px] md:text-[10px] font-[family-name:var(--font-jetbrains)] text-[var(--text-disabled)]">
             TMA ref: {data.tmaUltrasonic.toFixed(2)} m
@@ -818,7 +818,7 @@ export default function CommandCenter() {
         <FloodGaugeBar status={data.ewsStatus} />
       </div>
 
-      {/* ── KPI CARDS ── */}
+      {/* â”€â”€ KPI CARDS â”€â”€ */}
       <div>
         <SectionHeader>Pemantauan Hidrologi & Fusi Sensor</SectionHeader>
 
@@ -826,7 +826,7 @@ export default function CommandCenter() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-5 md:mb-6">
           <WaterLevelWidget value={data.tmaHydrostatic} max={3.5} label="TMA Hidrostatis" color="#38bdf8" unit="M" />
           <WaterLevelWidget value={data.tmaUltrasonic} max={3.5} label="TMA Ultrasonik" color="#818cf8" unit="M" />
-          <WaveCard value={data.discharge} label="Debit Air" color="#2dd4bf" unit="m³/s" />
+          <WaveCard value={data.discharge} label="Debit Air" color="#2dd4bf" unit="mÂ³/s" />
           <GaugeWidget value={data.flowRate1} max={50} label="Laju Aliran Turbin" color="#a78bfa" unit="L/min" />
         </div>
 
@@ -840,7 +840,7 @@ export default function CommandCenter() {
             icon={CloudRain}
             accentColor="#6366F1"
             statusDot={data.rainRate > 50 ? 'error' : data.rainRate > 0 ? 'warn' : 'ok'}
-            statusLabel={data.rainRate > 50 ? 'Hujan lebat · tipping bucket' : data.rainRate > 0 ? 'Hujan terdeteksi' : 'Cuaca cerah'}
+            statusLabel={data.rainRate > 50 ? 'Hujan lebat Â· tipping bucket' : data.rainRate > 0 ? 'Hujan terdeteksi' : 'Cuaca cerah'}
             statusColor={data.rainRate > 50 ? 'var(--ews-awas)' : data.rainRate > 0 ? 'var(--ews-waspada)' : 'var(--ews-aman)'}
           />
 
@@ -933,7 +933,7 @@ export default function CommandCenter() {
         </div>
       </div>
 
-      {/* ── VISUALIZER + CHART ── */}
+      {/* â”€â”€ VISUALIZER + CHART â”€â”€ */}
       <div>
         <SectionHeader>Visualisasi & Hidrograf Waktu Nyata</SectionHeader>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
@@ -971,13 +971,13 @@ export default function CommandCenter() {
         </div>
       </div>
 
-      {/* ── GIS MAP ── */}
+      {/* â”€â”€ GIS MAP â”€â”€ */}
       <div>
         <SectionHeader>Peta Spasial & Lapisan Radar BMKG</SectionHeader>
         <div className="card h-[360px] md:h-[420px] overflow-hidden flex flex-col">
           <PanelHeader
             title="Spasial DAS Wanggu"
-            subtitle="Daerah tangkapan air (DTA) — Kendari, Sulawesi Tenggara"
+            subtitle="Daerah tangkapan air (DTA) â€” Kendari, Sulawesi Tenggara"
             action={
               <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
                 <div className="flex items-center gap-1 md:gap-1.5 px-2 py-1 md:px-2.5 md:py-1 rounded-full bg-[var(--brand-50)] border border-[var(--brand-100)] text-[8px] md:text-[9px] font-[family-name:var(--font-jetbrains)] font-semibold uppercase tracking-widest text-[var(--brand-700)] whitespace-nowrap">
