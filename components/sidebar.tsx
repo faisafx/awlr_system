@@ -85,16 +85,12 @@ export function Sidebar() {
       )}
 
       <aside
-        className={`fixed top-0 left-0 md:relative md:top-auto md:left-auto z-[70] md:z-20 h-[100dvh] md:h-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-[280px] md:w-auto ${expanded ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+        className={`fixed inset-y-0 left-0 md:relative z-[70] md:z-20 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col shrink-0 overflow-hidden ${
+          expanded ? 'translate-x-0 w-full md:w-[260px]' : '-translate-x-full md:translate-x-0 w-full md:w-[64px]'
+        }`}
         style={{
-          width: expanded ? 280 : 64,
-          minWidth: expanded ? 280 : 64,
           background: 'var(--surface-card)',
           borderRight: '1px solid var(--border-subtle)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          flexShrink: 0,
           boxShadow: expanded ? '4px 0 24px rgba(0,0,0,0.4)' : 'none',
         }}
       >

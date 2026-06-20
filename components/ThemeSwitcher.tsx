@@ -22,7 +22,7 @@ export function ThemeSwitcher() {
   }, []);
 
   if (!mounted) {
-    return <div style={{ width: '130px', height: '32px', background: 'var(--surface-inset)', borderRadius: 'var(--radius-lg)' }} />;
+    return <div className="w-8 h-8 md:w-9 md:h-9 bg-[var(--surface-inset)] rounded-full" />;
   }
 
   const activeTheme = THEMES.find((t) => t.id === theme) || THEMES[0];
@@ -32,22 +32,11 @@ export function ThemeSwitcher() {
     <div style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(!open)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '6px 12px',
-          borderRadius: 'var(--radius-lg)',
-          background: 'var(--surface-inset)',
-          border: '1px solid var(--border-subtle)',
-          color: 'var(--text-secondary)',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-        }}
+        className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-[var(--surface-inset)] border border-[var(--border-subtle)] text-[var(--text-secondary)] hover:text-[var(--brand-600)] transition-colors"
+        aria-label="Ganti Tema"
+        title="Ganti Tema"
       >
-        <Icon size={14} />
-        <span style={{ fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-jetbrains)' }}>{activeTheme.label}</span>
-        <ChevronDown size={14} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        <Icon size={16} />
       </button>
 
       {open && (
