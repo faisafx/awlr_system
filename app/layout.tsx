@@ -63,7 +63,7 @@ function TopBar() {
     <header className="h-[72px] bg-[var(--surface-card)] border-b border-[var(--border-subtle)] flex items-center justify-between px-3 md:px-6 lg:px-8 relative z-30 shrink-0 shadow-sm">
 
       {/* Left: Brand mark + station identity */}
-      <div className="flex items-center gap-4 pl-12 md:pl-0">
+      <div className="flex items-center gap-3 md:gap-4 pl-10 md:pl-0">
         {/* Logo mark - Enlarged & stylized */}
         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--brand-50)] border border-[var(--brand-100)] shadow-inner">
           <svg width="24" height="24" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -180,7 +180,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth scrollbar-hide">
 
                 {/* Inner padding */}
-                <div className="max-w-[1440px] mx-auto px-5 md:px-7 py-6 pb-12">
+                <div className="max-w-[1440px] mx-auto px-3 md:px-5 lg:px-7 py-4 md:py-6 pb-8 md:pb-12">
                   <PageTransitionWrapper>
                     {children}
                   </PageTransitionWrapper>

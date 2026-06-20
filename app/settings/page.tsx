@@ -50,16 +50,17 @@ export default function GlobalSettingsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6 h-full font-[family-name:var(--font-inter)]">
+    <div className="flex flex-col gap-4 md:gap-6 h-full font-[family-name:var(--font-inter)]">
       
       {/* ── BARIS 1: Header Dokumen ── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[var(--border-subtle)] pb-4 shrink-0">
-        <div>
-          <h1 className="text-[20px] font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-2">
-            <Settings className="text-[var(--brand-600)]" size={24} />
-            Pengaturan Global <span className="text-[var(--text-disabled)] font-normal ml-1">| System Config</span>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 md:gap-4 border-b border-[var(--border-subtle)] pb-4 shrink-0">
+        <div className="min-w-0">
+          <h1 className="text-[17px] md:text-[20px] font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-2">
+            <Settings className="text-[var(--brand-600)] shrink-0" size={22} />
+            <span className="truncate">Pengaturan Global</span>
+            <span className="text-[var(--text-disabled)] font-normal ml-1 hidden sm:inline">| System Config</span>
           </h1>
-          <p className="text-[12px] text-[var(--text-muted)] mt-1 font-medium uppercase tracking-widest">
+          <p className="text-[11px] md:text-[12px] text-[var(--text-muted)] mt-1 font-medium uppercase tracking-widest truncate">
             Centralized Core Configuration Panel
           </p>
         </div>
@@ -81,10 +82,10 @@ export default function GlobalSettingsPage() {
       </div>
 
       {/* ── BARIS 2: Layout Belah Dua (Navigasi Kiri vs Form Kanan) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-start flex-1 min-h-0">
         
         {/* PANEL KIRIM: Navigasi Kategori Pengaturan */}
-        <div className="lg:col-span-3 card p-2 flex flex-col gap-1 shrink-0">
+        <div className="lg:col-span-3 card p-1.5 md:p-2 flex lg:flex-col gap-1 shrink-0 overflow-x-auto lg:overflow-x-visible scrollbar-hide">
           <SettingsNavButton 
             active={activeSection === 'MQTT'} 
             onClick={() => setActiveSection('MQTT')} 
@@ -114,14 +115,14 @@ export default function GlobalSettingsPage() {
         {/* PANEL KANAN: Form Pengisian Dinamis */}
         <div className="lg:col-span-9 card flex flex-col h-full overflow-hidden">
           
-          <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
+          <div className="p-4 md:p-6 flex-1 overflow-y-auto scrollbar-hide">
             
             {/* KATEGORI 1: Pipeline & Broker MQTT */}
             {activeSection === 'MQTT' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="space-y-5 md:space-y-6">
                 <div className="border-b border-[var(--border-subtle)] pb-3">
-                  <h2 className="text-[16px] font-bold text-[var(--text-primary)]">Pipa Jalur Data Jaringan</h2>
-                  <p className="text-[12px] text-[var(--text-secondary)] mt-1">Kredensial Koneksi Gateway EMQX Publik/Privat untuk akuisisi telemetri.</p>
+                  <h2 className="text-[15px] md:text-[16px] font-bold text-[var(--text-primary)]">Pipa Jalur Data Jaringan</h2>
+                  <p className="text-[11px] md:text-[12px] text-[var(--text-secondary)] mt-1">Kredensial Koneksi Gateway EMQX Publik/Privat untuk akuisisi telemetri.</p>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -145,7 +146,7 @@ export default function GlobalSettingsPage() {
 
             {/* KATEGORI 2: Anchor & Metadata Stasiun */}
             {activeSection === 'STATION' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="space-y-5 md:space-y-6">
                 <div className="border-b border-[var(--border-subtle)] pb-3">
                   <h2 className="text-[16px] font-bold text-[var(--text-primary)]">Metadata Registrasi Geografis</h2>
                   <p className="text-[12px] text-[var(--text-secondary)] mt-1">Identitas Absolut Penempatan Fisik Stasiun Lapangan pada GIS Matrix.</p>
@@ -165,7 +166,7 @@ export default function GlobalSettingsPage() {
 
             {/* KATEGORI 3: Ambang Batas EWS (PUPR) */}
             {activeSection === 'THRES' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="space-y-5 md:space-y-6">
                 <div className="border-b border-[var(--border-subtle)] pb-3">
                   <h2 className="text-[16px] font-bold text-[var(--text-primary)] flex items-center gap-2">Ambang Batas Kedaruratan Vertikal</h2>
                   <p className="text-[12px] text-[var(--text-secondary)] mt-1">Konfigurasi Aturan Sempadan Banjir Standar Ditjen SDA PUPR.</p>
@@ -192,7 +193,7 @@ export default function GlobalSettingsPage() {
 
             {/* KATEGORI 4: Utilitas & Sinkronisasi Waktu */}
             {activeSection === 'SYS' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="space-y-5 md:space-y-6">
                 <div className="border-b border-[var(--border-subtle)] pb-3">
                   <h2 className="text-[16px] font-bold text-[var(--text-primary)]">Utilitas Sinkronisasi Waktu & Jadwal</h2>
                   <p className="text-[12px] text-[var(--text-secondary)] mt-1">Penetapan Parameter Pewaktuan Global Perangkat Keras MCU.</p>
@@ -220,14 +221,14 @@ export default function GlobalSettingsPage() {
       </div>
 
       {/* ── BARIS 3: Doktrin Hukum Keamanan Siber BWS IV ── */}
-      <div className="card p-5 bg-[var(--surface-inset)] flex items-start gap-4 shrink-0">
-        <div className="w-10 h-10 rounded-lg bg-[var(--surface-card)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0 shadow-sm">
-          <TerminalSquare size={20} className="text-[var(--text-muted)]" />
+      <div className="card p-4 md:p-5 bg-[var(--surface-inset)] flex items-start gap-3 md:gap-4 shrink-0">
+        <div className="w-9 h-9 md:w-10 md:h-10 rounded-lg bg-[var(--surface-card)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0 shadow-sm">
+          <TerminalSquare size={18} className="text-[var(--text-muted)]" />
         </div>
-        <div className="space-y-1.5">
-          <span className="font-bold text-[var(--text-primary)] text-[12px] uppercase tracking-wide block">Doktrin Perlindungan Enkripsi & Integritas Gateway</span>
-          <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed text-justify">
-            Seluruh berkas kredensial broker MQTT dan hak akses pipa parameter dilindungi menggunakan standar enkripsi lapisan transport TLS/SSL aman pada gerbang port 8084 WSS. Sesuai dengan protokol tata kelola data intelijen kebencanaan Balai Wilayah Sungai Sulawesi IV, pembukaan kunci enkripsi atau modifikasi sebaran koordinat absolut tanpa surat otorisasi dari penanggung jawab teknis dilarang keras guna mencegah manipulasi isyarat peringatan dini (<em>false injection flood alarms</em>) oleh pihak luar.
+        <div className="space-y-1.5 min-w-0">
+          <span className="font-bold text-[var(--text-primary)] text-[11px] md:text-[12px] uppercase tracking-wide block">Doktrin Perlindungan Enkripsi & Integritas Gateway</span>
+          <p className="text-[10px] md:text-[11px] text-[var(--text-secondary)] leading-relaxed">
+            Seluruh berkas kredensial broker MQTT dan hak akses pipa parameter dilindungi menggunakan standar enkripsi lapisan transport TLS/SSL aman pada gerbang port 8084 WSS.
           </p>
         </div>
       </div>
@@ -243,13 +244,13 @@ function SettingsNavButton({ active, onClick, icon: Icon, label }: { active: boo
     <button
       onClick={onClick}
       className={cn(
-        "w-full px-4 py-3 rounded-lg text-[11px] font-bold uppercase tracking-widest text-left flex items-center gap-3 transition-all",
+        "whitespace-nowrap px-3 py-2.5 lg:px-4 lg:py-3 rounded-lg text-[10px] lg:text-[11px] font-bold uppercase tracking-widest text-left flex items-center gap-2 lg:gap-3 transition-all shrink-0 lg:w-full",
         active 
           ? "bg-[var(--brand-50)] text-[var(--brand-700)] border border-[var(--brand-200)] shadow-sm" 
           : "text-[var(--text-secondary)] hover:bg-[var(--surface-inset)] hover:text-[var(--text-primary)] border border-transparent"
       )}
     >
-      <Icon size={16} /> {label}
+      <Icon size={15} className="shrink-0" /> {label}
     </button>
   );
 }

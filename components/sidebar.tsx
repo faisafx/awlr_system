@@ -69,7 +69,7 @@ export function Sidebar() {
     <>
       {/* ── Mobile Hamburger Toggle (Outside Sidebar) ── */}
       <button
-        className="md:hidden fixed top-[20px] left-[20px] z-[60] flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--surface-card)] border border-[var(--border-subtle)] text-[var(--text-secondary)] shadow-sm hover:text-[var(--brand-600)] transition-colors"
+        className="md:hidden fixed top-[20px] left-[12px] z-[60] flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--surface-card)] border border-[var(--border-subtle)] text-[var(--text-secondary)] shadow-sm hover:text-[var(--brand-600)] transition-colors"
         onClick={toggle}
         aria-label="Toggle Mobile Menu"
       >
@@ -85,10 +85,10 @@ export function Sidebar() {
       )}
 
       <aside
-        className={`fixed top-0 left-0 md:relative md:top-auto md:left-auto z-[70] md:z-20 h-[100dvh] md:h-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${expanded ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+        className={`fixed top-0 left-0 md:relative md:top-auto md:left-auto z-[70] md:z-20 h-[100dvh] md:h-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] w-[280px] md:w-auto ${expanded ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
         style={{
-          width: W,
-          minWidth: W,
+          width: expanded ? 280 : 64,
+          minWidth: expanded ? 280 : 64,
           background: 'var(--surface-card)',
           borderRight: '1px solid var(--border-subtle)',
           display: 'flex',
@@ -170,7 +170,7 @@ export function Sidebar() {
                 const badge = (route as { badge?: string }).badge;
 
                 return (
-                  <Link key={route.href} href={route.href} style={{ textDecoration: 'none', display: 'block', marginBottom: '1px' }} title={!expanded ? route.label : undefined}>
+                  <Link key={route.href} href={route.href} style={{ textDecoration: 'none', display: 'block', marginBottom: '1px' }} title={!expanded ? route.label : undefined} onClick={() => { if (window.innerWidth < 768) setExpanded(false); }}>
                     <div
                       style={{
                         display: 'flex',

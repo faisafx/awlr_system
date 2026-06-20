@@ -110,25 +110,18 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 
 function PanelHeader({ title, subtitle, action }: { title: string; subtitle: string; action?: React.ReactNode }) {
   return (
-    <div
-      style={{
-        padding: '12px 16px',
-        borderBottom: '1px solid var(--border-subtle)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexShrink: 0,
-      }}
-    >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-        <span style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-primary)' }}>
+    <div className="flex items-center justify-between px-3 md:px-4 py-3 border-b border-[var(--border-subtle)] shrink-0 gap-2">
+      <div className="flex flex-col gap-0.5 overflow-hidden">
+        <span className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--text-primary)] truncate">
           {title}
         </span>
-        <span style={{ fontSize: '10px', fontFamily: 'var(--font-jetbrains), monospace', color: 'var(--text-muted)' }}>
+        <span className="text-[9px] md:text-[10px] font-[family-name:var(--font-jetbrains)] text-[var(--text-muted)] truncate hidden sm:block">
           {subtitle}
         </span>
       </div>
-      {action}
+      <div className="shrink-0">
+        {action}
+      </div>
     </div>
   );
 }
@@ -703,13 +696,13 @@ export default function CommandCenter() {
   const relayActive = data.relay1Siren || data.relay2Alarm;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="flex flex-col gap-4 md:gap-5">
 
       {/* ── COMMAND BAR ── */}
-      <div className="card" style={{ padding: '16px 20px' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+      <div className="card p-3 md:p-4 lg:px-5">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 md:gap-4">
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div className="flex items-center gap-3">
             <div
               className="icon-container brand"
               style={{ width: '40px', height: '40px' }}
@@ -819,7 +812,7 @@ export default function CommandCenter() {
         <SectionHeader>Pemantauan Hidrologi & Fusi Sensor</SectionHeader>
 
         {/* Custom Bespoke Widgets Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-5 md:mb-6">
           <WaterLevelWidget value={data.tmaHydrostatic} max={3.5} label="TMA Hidrostatis" color="#38bdf8" unit="M" />
           <WaterLevelWidget value={data.tmaUltrasonic} max={3.5} label="TMA Ultrasonik" color="#818cf8" unit="M" />
           <WaveCard value={data.discharge} label="Debit Air" color="#2dd4bf" unit="m³/s" />
@@ -827,7 +820,7 @@ export default function CommandCenter() {
         </div>
 
         <SectionHeader>Parameter Lingkungan & Infrastruktur</SectionHeader>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
 
           <KpiCard
             label="Intensitas Hujan (Ombrometer)"
@@ -932,30 +925,26 @@ export default function CommandCenter() {
       {/* ── VISUALIZER + CHART ── */}
       <div>
         <SectionHeader>Visualisasi & Hidrograf Waktu Nyata</SectionHeader>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-4">
 
-          <div className="card" style={{ height: '420px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div className="card lg:col-span-1 flex flex-col overflow-hidden h-[360px] md:h-[420px]">
             <PanelHeader
               title="Topografi Sensor Array"
               subtitle="Skema peletakan elemen struktur"
-              action={<span className="badge neutral">CAD View</span>}
+              action={<span className="badge neutral text-[9px] md:text-[10px]">CAD View</span>}
             />
-            <div style={{ flex: 1, position: 'relative' }}>
+            <div className="flex-1 relative">
               <StationVisualizer />
             </div>
           </div>
 
-          <div className="card" style={{ height: '420px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div className="card lg:col-span-2 flex flex-col overflow-hidden h-[400px] md:h-[420px]">
             <PanelHeader
               title="Hidrograf Telemetri"
-              subtitle="Sensor fusi vs garis batas PUPR — resolusi 1 menit"
+              subtitle="Sensor fusi vs garis batas PUPR"
               action={
                 <button
-                  style={{
-                    width: '28px', height: '28px', borderRadius: 'var(--radius-md)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '1px solid var(--border-subtle)', background: 'none', cursor: 'pointer',
-                  }}
+                  className="w-7 h-7 rounded-md flex items-center justify-center border border-[var(--border-subtle)] bg-transparent cursor-pointer hover:bg-[var(--surface-inset)] transition-colors"
                   onClick={() => window.location.reload()}
                   title="Refresh chart"
                 >
@@ -963,7 +952,7 @@ export default function CommandCenter() {
                 </button>
               }
             />
-            <div style={{ flex: 1, padding: '12px' }}>
+            <div className="flex-1 p-2 md:p-3 relative">
               <TelemetryChart />
             </div>
           </div>
@@ -974,40 +963,24 @@ export default function CommandCenter() {
       {/* ── GIS MAP ── */}
       <div>
         <SectionHeader>Peta Spasial & Lapisan Radar BMKG</SectionHeader>
-        <div className="card" style={{ height: '360px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div className="card h-[360px] md:h-[420px] overflow-hidden flex flex-col">
           <PanelHeader
             title="Spasial DAS Wanggu"
             subtitle="Daerah tangkapan air (DTA) — Kendari, Sulawesi Tenggara"
             action={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '5px',
-                    padding: '3px 8px', borderRadius: '99px',
-                    background: 'var(--brand-50)', border: '1px solid var(--brand-100)',
-                    fontSize: '9px', fontFamily: 'var(--font-jetbrains), monospace',
-                    fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--brand-700)',
-                  }}
-                >
-                  <span className="status-dot live" style={{ width: '5px', height: '5px' }} />
-                  Radar Aktif
+              <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+                <div className="flex items-center gap-1 md:gap-1.5 px-2 py-1 md:px-2.5 md:py-1 rounded-full bg-[var(--brand-50)] border border-[var(--brand-100)] text-[8px] md:text-[9px] font-[family-name:var(--font-jetbrains)] font-semibold uppercase tracking-widest text-[var(--brand-700)] whitespace-nowrap">
+                  <span className="status-dot live w-1 h-1 md:w-1.5 md:h-1.5" />
+                  Radar
                 </div>
-                <div
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '5px',
-                    padding: '3px 8px', borderRadius: '99px',
-                    background: 'var(--ews-aman-bg)', border: '1px solid #BBF7D0',
-                    fontSize: '9px', fontFamily: 'var(--font-jetbrains), monospace',
-                    fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--ews-aman)',
-                  }}
-                >
+                <div className="flex items-center gap-1 md:gap-1.5 px-2 py-1 md:px-2.5 md:py-1 rounded-full bg-[var(--ews-aman-bg)] border border-[#BBF7D0] text-[8px] md:text-[9px] font-[family-name:var(--font-jetbrains)] font-semibold uppercase tracking-widest text-[var(--ews-aman)] whitespace-nowrap">
                   <MapPin size={8} />
                   WGG-01
                 </div>
               </div>
             }
           />
-          <div style={{ flex: 1, position: 'relative' }}>
+          <div className="flex-1 relative">
             <GISMap />
           </div>
         </div>
