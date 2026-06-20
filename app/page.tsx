@@ -458,32 +458,6 @@ Jawab dengan asik, informatif, dan langsung ke intinya!`;
               </div>
             </div>
           </div>
-          
-          <select 
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            style={{
-              background: 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              color: 'white',
-              fontSize: '10px',
-              padding: '6px 24px 6px 12px',
-              borderRadius: '12px',
-              outline: 'none',
-              cursor: 'pointer',
-              backdropFilter: 'blur(8px)',
-              fontFamily: 'var(--font-jetbrains), monospace',
-              appearance: 'none',
-              backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 8px center',
-              backgroundSize: '12px',
-            }}
-          >
-            <option value="gemini-flash-latest" style={{ color: 'black' }}>Gemini Flash (Cepat)</option>
-            <option value="gemini-1.5-pro" style={{ color: 'black' }}>Gemini Pro (Pintar)</option>
-            <option value="gemini-2.0-flash" style={{ color: 'black' }}>Gemini 2.0 (Bisa Limit)</option>
-          </select>
         </div>
 
         {/* Chat Body */}
@@ -544,38 +518,70 @@ Jawab dengan asik, informatif, dan langsung ke intinya!`;
         </div>
 
         {/* Input Area */}
-        <div style={{ padding: '16px', background: 'var(--surface-card)', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
-          <textarea
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder="Tulis pesan ke AI..."
-            rows={1}
-            style={{
-              flex: 1, resize: 'none', border: '1px solid var(--border-default)',
-              borderRadius: '20px', padding: '10px 16px',
-              fontSize: '13px', lineHeight: 1.5, fontFamily: 'inherit',
-              color: 'var(--text-primary)', background: 'var(--surface-inset)',
-              outline: 'none', overflowY: 'hidden', minHeight: '40px', maxHeight: '120px'
-            }}
-            onFocus={e => { e.target.style.borderColor = 'var(--brand-500)'; e.target.style.background = 'var(--surface-bg)'; }}
-            onBlur={e => { e.target.style.borderColor = 'var(--border-default)'; e.target.style.background = 'var(--surface-inset)'; }}
-          />
-          <button
-            onClick={send}
-            disabled={loading || !input.trim()}
-            style={{
-              width: '40px', height: '40px', borderRadius: '20px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: loading || !input.trim() ? 'var(--surface-inset)' : 'var(--brand-600)',
-              border: 'none',
-              cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
-              flexShrink: 0, transition: 'all 0.2s',
-              boxShadow: loading || !input.trim() ? 'none' : '0 4px 12px rgba(37,99,235,0.3)',
-            }}
-          >
-            <Send size={16} style={{ color: loading || !input.trim() ? 'var(--text-disabled)' : 'white', marginLeft: '2px' }} />
-          </button>
+        <div style={{ padding: '12px 16px', background: 'var(--surface-card)', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          
+          {/* Model Selector (Kiri Bawah) */}
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <select 
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              style={{
+                background: 'var(--surface-inset)',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-secondary)',
+                fontSize: '10px',
+                padding: '4px 20px 4px 10px',
+                borderRadius: '8px',
+                outline: 'none',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-jetbrains), monospace',
+                appearance: 'none',
+                backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 6px center',
+                backgroundSize: '10px',
+              }}
+            >
+              <option value="gemini-flash-latest">Gemini Flash (Cepat)</option>
+              <option value="gemini-1.5-pro">Gemini Pro (Pintar)</option>
+              <option value="gemini-2.0-flash">Gemini 2.0 (Bisa Limit)</option>
+            </select>
+          </div>
+
+          {/* Textarea & Send Button */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+            <textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
+              placeholder="Tulis pesan ke AI..."
+              rows={1}
+              style={{
+                flex: 1, resize: 'none', border: '1px solid var(--border-default)',
+                borderRadius: '20px', padding: '10px 16px',
+                fontSize: '13px', lineHeight: 1.5, fontFamily: 'inherit',
+                color: 'var(--text-primary)', background: 'var(--surface-inset)',
+                outline: 'none', overflowY: 'hidden', minHeight: '40px', maxHeight: '120px'
+              }}
+              onFocus={e => { e.target.style.borderColor = 'var(--brand-500)'; e.target.style.background = 'var(--surface-bg)'; }}
+              onBlur={e => { e.target.style.borderColor = 'var(--border-default)'; e.target.style.background = 'var(--surface-inset)'; }}
+            />
+            <button
+              onClick={send}
+              disabled={loading || !input.trim()}
+              style={{
+                width: '40px', height: '40px', borderRadius: '20px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: loading || !input.trim() ? 'var(--surface-inset)' : 'var(--brand-600)',
+                border: 'none',
+                cursor: loading || !input.trim() ? 'not-allowed' : 'pointer',
+                flexShrink: 0, transition: 'all 0.2s',
+                boxShadow: loading || !input.trim() ? 'none' : '0 4px 12px rgba(37,99,235,0.3)',
+              }}
+            >
+              <Send size={16} style={{ color: loading || !input.trim() ? 'var(--text-disabled)' : 'white', marginLeft: '2px' }} />
+            </button>
+          </div>
         </div>
       </div>
 
