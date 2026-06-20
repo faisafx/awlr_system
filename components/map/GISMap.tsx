@@ -67,7 +67,11 @@ const createInfrastructureIcon = () => {
   });
 };
 
-export default function GISMap() {
+interface GISMapProps {
+  hardwareStatus?: string;
+}
+
+export default function GISMap({ hardwareStatus }: GISMapProps) {
   const [mounted, setMounted] = useState(false);
   const [radarIntensity, setRadarIntensity] = useState(0.4);
 
