@@ -89,16 +89,18 @@ export default function TelemetryChart() {
       legend: {
         data: ['TMA Hydrostatic', 'TMA Ultrasonic', 'Curah Hujan'],
         top: 0,
-        textStyle: { color: '#94a3b8', fontSize: 11 },
+        type: 'scroll',
+        itemGap: 10,
+        textStyle: { color: '#94a3b8', fontSize: 10 },
         icon: 'circle'
       },
       
       // Margin Grid Chart
       grid: {
-        top: '15%',
-        left: '3%',
-        right: '3%',
-        bottom: '12%',
+        top: 40,
+        left: '2%',
+        right: '2%',
+        bottom: '15%',
         containLabel: true
       },
 
