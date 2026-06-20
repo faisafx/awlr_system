@@ -86,7 +86,7 @@ export function Sidebar() {
 
       <aside
         className={`fixed inset-y-0 left-0 md:relative z-[70] md:z-20 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col shrink-0 overflow-hidden ${
-          expanded ? 'translate-x-0 w-full md:w-[260px]' : '-translate-x-full md:translate-x-0 w-full md:w-[64px]'
+          expanded ? 'translate-x-0 w-[280px] md:w-[260px]' : '-translate-x-full md:translate-x-0 w-[280px] md:w-[64px]'
         }`}
         style={{
           background: 'var(--surface-card)',
