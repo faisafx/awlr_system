@@ -14,9 +14,11 @@ import {
   SlidersHorizontal, 
   AlertTriangle, 
   CheckCircle2, 
-  Terminal,
+  TerminalSquare,
   Activity,
-  Send
+  Send,
+  Server,
+  DatabaseZap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -53,7 +55,7 @@ const ASSETS = [
   {
     id: 'BMN-AWLR-CORE-001',
     name: 'Main Processing Unit MCU',
-    type: 'ESP32-WROOM-32E Dev Carrier',
+    type: 'ESP32-S3 WROOM',
     health: 98,
     uptime: '2,140 Jam',
     calibrationDue: 365,
@@ -67,22 +69,26 @@ export default function InfrastructurePage() {
   const [activeTab, setActiveTab] = useState<'registry' | 'network' | 'calibration'>('registry');
 
   return (
-    <div className="flex flex-col gap-6 h-full text-slate-200">
+    <div className="flex flex-col gap-6 h-full">
       
       {/* ── Header Section ────────────────────────────────────────────────── */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-cyan-900/40 pb-4">
+      <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-[var(--border-subtle)] pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <Cpu className="text-cyan-400" />
-            INFRASTRUCTURE <span className="text-slate-500 font-light">| SYS.OP</span>
+          <h1 className="text-[20px] font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-2">
+            <Server className="text-[var(--brand-600)]" size={24} />
+            Perangkat & Jaringan
           </h1>
-          <p className="text-xs font-mono text-slate-400 mt-1 uppercase tracking-widest">
-            Operator: Faisal F. // Node: Sungai Wanggu // Status: <span className="text-teal-400">Online</span>
+          <p className="text-[12px] text-[var(--text-muted)] mt-1 font-medium flex items-center gap-2">
+            Operator: Faisal F. <span className="text-[var(--border-default)]">|</span> Node: Sungai Wanggu 
+            <span className="flex items-center gap-1.5 ml-2 bg-[var(--ews-aman-bg)] text-[var(--ews-aman)] border border-[#BBF7D0] px-2 py-0.5 rounded-full text-[10px] font-bold font-[family-name:var(--font-jetbrains)] uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 bg-[var(--ews-aman)] rounded-full animate-pulse"></span>
+              Online
+            </span>
           </p>
         </div>
 
-        {/* Tactical Tabs */}
-        <div className="flex bg-[#020617]/50 p-1 rounded-md border border-cyan-900/30">
+        {/* Enterprise Tabs */}
+        <div className="flex bg-[var(--surface-inset)] p-1.5 rounded-xl border border-[var(--border-subtle)]">
           <TabButton 
             active={activeTab === 'registry'} 
             onClick={() => setActiveTab('registry')} 
@@ -105,7 +111,7 @@ export default function InfrastructurePage() {
       </header>
 
       {/* ── Content Area (Animated Transition) ────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar relative">
+      <div className="flex-1 relative">
         <AnimatePresence mode="wait">
           
           {/* TAB 1: HARDWARE REGISTRY */}
@@ -115,54 +121,59 @@ export default function InfrastructurePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
               className="grid grid-cols-1 xl:grid-cols-2 gap-4"
             >
               {ASSETS.map((asset) => (
-                <div key={asset.id} className="bg-[#040A18]/60 border border-cyan-900/30 rounded-lg p-5 relative group hover:border-cyan-500/50 transition-colors">
-                  {/* Corner Brackets */}
-                  <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-cyan-500/50 rounded-tl pointer-events-none" />
-                  <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-cyan-500/50 rounded-br pointer-events-none" />
-
-                  <div className="flex justify-between items-start mb-4">
+                <div key={asset.id} className="card p-5 group hover:border-[var(--brand-300)] transition-colors">
+                  
+                  <div className="flex justify-between items-start mb-5">
                     <div>
-                      <h3 className="font-bold text-cyan-50">{asset.name}</h3>
-                      <p className="text-xs font-mono text-cyan-500 mt-0.5">{asset.id}</p>
+                      <h3 className="font-bold text-[14px] text-[var(--text-primary)]">{asset.name}</h3>
+                      <p className="text-[11px] font-[family-name:var(--font-jetbrains)] font-medium text-[var(--brand-600)] mt-1">{asset.id}</p>
                     </div>
-                    {asset.status === 'optimal' ? (
-                      <CheckCircle2 className="text-teal-500 w-5 h-5" />
-                    ) : (
-                      <AlertTriangle className="text-rose-500 w-5 h-5 animate-pulse" />
-                    )}
+                    <div className={cn(
+                      "p-2 rounded-lg border",
+                      asset.status === 'optimal' ? "bg-[var(--ews-aman-bg)] border-[#BBF7D0]" : "bg-[var(--ews-waspada-bg)] border-[#FDE68A]"
+                    )}>
+                      {asset.status === 'optimal' ? (
+                        <CheckCircle2 size={18} className="text-[var(--ews-aman)]" />
+                      ) : (
+                        <AlertTriangle size={18} className="text-[var(--ews-waspada)]" />
+                      )}
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-[#020617] p-2 rounded border border-white/5">
-                      <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Spesifikasi</span>
-                      <span className="text-xs font-mono text-slate-300">{asset.type}</span>
+                  <div className="grid grid-cols-2 gap-3 mb-5">
+                    <div className="bg-[var(--surface-inset)] p-3 rounded-lg border border-[var(--border-subtle)]">
+                      <span className="text-[9px] text-[var(--text-muted)] uppercase font-bold tracking-widest block mb-1">Spesifikasi</span>
+                      <span className="text-[11px] font-[family-name:var(--font-jetbrains)] text-[var(--text-primary)] font-medium">{asset.type}</span>
                     </div>
-                    <div className="bg-[#020617] p-2 rounded border border-white/5">
-                      <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Durasi Aktif</span>
-                      <span className="text-xs font-mono text-slate-300">{asset.uptime}</span>
+                    <div className="bg-[var(--surface-inset)] p-3 rounded-lg border border-[var(--border-subtle)]">
+                      <span className="text-[9px] text-[var(--text-muted)] uppercase font-bold tracking-widest block mb-1">Durasi Aktif</span>
+                      <span className="text-[11px] font-[family-name:var(--font-jetbrains)] text-[var(--text-primary)] font-medium">{asset.uptime}</span>
                     </div>
                   </div>
 
                   {/* Health Bar */}
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-[10px] font-mono font-bold uppercase">
-                      <span className="text-slate-400">Health Index</span>
-                      <span className={asset.health > 80 ? 'text-teal-400' : 'text-rose-400'}>{asset.health}%</span>
+                  <div className="space-y-2 pt-4 border-t border-[var(--border-subtle)]">
+                    <div className="flex justify-between text-[10px] font-[family-name:var(--font-jetbrains)] font-bold uppercase">
+                      <span className="text-[var(--text-muted)]">Health Index</span>
+                      <span className={asset.health > 80 ? 'text-[var(--ews-aman)]' : 'text-[var(--ews-waspada)]'}>{asset.health}%</span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-[var(--surface-inset)] rounded-full overflow-hidden border border-[var(--border-subtle)]">
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${asset.health}%` }}
-                        className={cn("h-full", asset.health > 80 ? "bg-teal-500" : "bg-rose-500")}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className={cn("h-full", asset.health > 80 ? "bg-[var(--ews-aman)]" : "bg-[var(--ews-waspada)]")}
                       />
                     </div>
-                    <p className="text-[10px] font-mono text-right mt-1 text-slate-500">
-                      Jatuh Tempo Kalibrasi: <span className={asset.calibrationDue < 30 ? 'text-rose-400' : 'text-slate-300'}>{asset.calibrationDue} Hari</span>
+                    <p className="text-[10px] font-medium text-right text-[var(--text-secondary)] mt-2">
+                      Jatuh Tempo Kalibrasi: <span className={cn("font-bold font-[family-name:var(--font-jetbrains)]", asset.calibrationDue < 30 ? 'text-[var(--ews-awas)]' : 'text-[var(--text-primary)]')}>{asset.calibrationDue} Hari</span>
                     </p>
                   </div>
+
                 </div>
               ))}
             </motion.div>
@@ -175,13 +186,14 @@ export default function InfrastructurePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="grid grid-cols-1 lg:grid-cols-3 gap-4"
+              transition={{ duration: 0.2 }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-6"
             >
               {/* Telemetry Stats */}
-              <div className="lg:col-span-1 space-y-4">
-                <div className="bg-[#040A18]/60 border border-cyan-900/30 rounded-lg p-5">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Activity size={14} className="text-cyan-400" />
+              <div className="lg:col-span-1 flex flex-col gap-4">
+                <div className="card p-5">
+                  <h3 className="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-widest mb-5 flex items-center gap-2 border-b border-[var(--border-subtle)] pb-3">
+                    <Activity size={16} className="text-[var(--brand-600)]" />
                     RF Diagnostics
                   </h3>
                   <div className="space-y-4">
@@ -192,35 +204,37 @@ export default function InfrastructurePage() {
                   </div>
                 </div>
                 
-                <div className="bg-teal-950/20 border border-teal-900/50 rounded-lg p-4 flex items-center gap-4">
-                  <div className="w-3 h-3 rounded-full bg-teal-500 animate-ping shrink-0" />
+                <div className="bg-[var(--brand-50)] border border-[var(--brand-100)] rounded-xl p-4 flex items-center gap-4 shadow-sm">
+                  <div className="w-10 h-10 rounded-lg bg-[var(--surface-card)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0 shadow-sm">
+                    <DatabaseZap size={20} className="text-[var(--brand-600)]" />
+                  </div>
                   <div>
-                    <h4 className="text-sm font-bold text-teal-400">MQTT Broker: EMQX</h4>
-                    <p className="text-[10px] font-mono text-teal-500/70">WSS:// port 8084 • Connected</p>
+                    <h4 className="text-[12px] font-bold text-[var(--brand-700)]">MQTT Broker: EMQX</h4>
+                    <p className="text-[10px] font-mono text-[var(--brand-600)] mt-0.5">WSS:// port 8084 • Connected</p>
                   </div>
                 </div>
               </div>
 
               {/* Terminal Raw Hex */}
-              <div className="lg:col-span-2 bg-[#020617] border border-cyan-900/30 rounded-lg p-1 flex flex-col">
-                <div className="bg-[#040A18] px-4 py-2 border-b border-cyan-900/30 flex items-center justify-between">
-                  <span className="text-[10px] font-mono text-cyan-500 flex items-center gap-2">
-                    <Terminal size={12} /> LIVE PAYLOAD STREAM (HEX)
+              <div className="lg:col-span-2 card p-0 overflow-hidden flex flex-col h-[320px] bg-[#0A0A0A] border-[var(--border-subtle)]">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-[#27272A] bg-[#18181B]">
+                  <span className="text-[10px] font-bold tracking-widest uppercase text-gray-300 flex items-center gap-2">
+                    <TerminalSquare size={14} className="text-gray-400" /> LIVE PAYLOAD STREAM (HEX)
                   </span>
-                  <span className="flex gap-1">
-                    <span className="w-2 h-2 rounded-full bg-rose-500/50"></span>
-                    <span className="w-2 h-2 rounded-full bg-amber-500/50"></span>
-                    <span className="w-2 h-2 rounded-full bg-teal-500/50"></span>
+                  <span className="flex gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500/80"></span>
                   </span>
                 </div>
-                <div className="flex-1 p-4 font-mono text-[11px] text-slate-400 overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#020617] z-10 pointer-events-none" />
+                <div className="flex-1 p-5 font-[family-name:var(--font-jetbrains)] text-[12px] leading-loose text-gray-400 overflow-hidden relative">
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0A0A0A] z-10 pointer-events-none" />
                   {/* Mock scrolling text */}
-                  <div className="space-y-1 animate-[pulse_4s_ease-in-out_infinite]">
-                    <p><span className="text-cyan-700">[14:02:01]</span> RX: 0A 14 00 5A 33 01 F4 ... <span className="text-teal-500">ACK</span></p>
-                    <p><span className="text-cyan-700">[14:02:05]</span> RX: 0A 14 00 5A 33 01 F5 ... <span className="text-teal-500">ACK</span></p>
-                    <p><span className="text-cyan-700">[14:02:10]</span> RX: 0B 12 01 4B 22 00 E1 ... <span className="text-amber-500">RETRY</span></p>
-                    <p><span className="text-cyan-700">[14:02:12]</span> RX: 0A 14 00 5A 33 01 F6 ... <span className="text-teal-500">ACK</span></p>
+                  <div className="space-y-1.5 animate-[pulse_4s_ease-in-out_infinite]">
+                    <p><span className="text-cyan-600">[{new Date().toLocaleTimeString()}]</span> RX: 0A 14 00 5A 33 01 F4 ... <span className="text-green-500 font-bold">ACK</span></p>
+                    <p><span className="text-cyan-600">[{new Date().toLocaleTimeString()}]</span> RX: 0A 14 00 5A 33 01 F5 ... <span className="text-green-500 font-bold">ACK</span></p>
+                    <p><span className="text-cyan-600">[{new Date().toLocaleTimeString()}]</span> RX: 0B 12 01 4B 22 00 E1 ... <span className="text-amber-500 font-bold">RETRY</span></p>
+                    <p><span className="text-cyan-600">[{new Date().toLocaleTimeString()}]</span> RX: 0A 14 00 5A 33 01 F6 ... <span className="text-green-500 font-bold">ACK</span></p>
                   </div>
                 </div>
               </div>
@@ -234,27 +248,30 @@ export default function InfrastructurePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="max-w-2xl mx-auto"
+              transition={{ duration: 0.2 }}
+              className="max-w-2xl mx-auto pt-4"
             >
-              <div className="bg-[#040A18]/80 border border-cyan-900/50 rounded-lg p-6 relative overflow-hidden">
-                {/* Background Tech Accent */}
-                <div className="absolute -right-20 -top-20 w-64 h-64 bg-cyan-900/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="card p-8 relative overflow-hidden">
+                {/* Clean geometric accent */}
+                <div className="absolute right-0 top-0 w-32 h-32 bg-[var(--brand-50)] rounded-bl-full pointer-events-none opacity-50" />
 
-                <div className="mb-6">
-                  <h2 className="text-lg font-bold text-cyan-50">Remote Parameter Injection</h2>
-                  <p className="text-xs text-slate-400 mt-1">Suntikkan variabel kalibrasi secara real-time ke memori ESP32 via MQTT.</p>
+                <div className="mb-8 relative z-10">
+                  <h2 className="text-[18px] font-bold text-[var(--text-primary)]">Remote Parameter Injection</h2>
+                  <p className="text-[12px] text-[var(--text-secondary)] mt-1.5 font-medium leading-relaxed">
+                    Suntikkan variabel kalibrasi secara real-time ke memori ESP32 via MQTT. <br/>Perubahan ini akan langsung mempengaruhi algoritma pembacaan sensor lapangan.
+                  </p>
                 </div>
 
-                <div className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-6 relative z-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <InputGroup label="ADC Offset (QDY30A)" defaultValue="0.045" unit="V" />
                     <InputGroup label="Voltage Multiplier" defaultValue="3.3" unit="x" />
                   </div>
                   
                   <InputGroup label="Water Density (Massa Jenis)" defaultValue="1000" unit="kg/m³" />
                   
-                  <div className="pt-4 border-t border-white/5 flex justify-end">
-                    <button className="flex items-center gap-2 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/50 px-5 py-2.5 rounded font-mono text-xs uppercase tracking-wider transition-all focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                  <div className="pt-6 mt-2 border-t border-[var(--border-subtle)] flex justify-end">
+                    <button className="flex items-center gap-2 bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white px-6 py-2.5 rounded-lg font-bold text-[12px] tracking-wide transition-all shadow-md focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-500)] focus:outline-none">
                       <Send size={14} /> Inject Payload
                     </button>
                   </div>
@@ -276,10 +293,10 @@ function TabButton({ active, onClick, icon: Icon, label }: any) {
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 px-4 py-2 rounded text-[10px] font-mono font-bold tracking-widest transition-all",
+        "flex items-center gap-2 px-5 py-2.5 rounded-lg text-[11px] font-bold tracking-widest uppercase transition-all",
         active 
-          ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]" 
-          : "text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent"
+          ? "bg-[var(--surface-card)] text-[var(--brand-700)] shadow-sm border border-[var(--border-subtle)]" 
+          : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-bg)] border border-transparent"
       )}
     >
       <Icon size={14} />
@@ -290,11 +307,11 @@ function TabButton({ active, onClick, icon: Icon, label }: any) {
 
 function MetricRow({ label, value, status }: { label: string, value: string, status: 'good' | 'warning' | 'neutral' }) {
   return (
-    <div className="flex justify-between items-center border-b border-white/5 pb-2">
-      <span className="text-xs font-mono text-slate-400">{label}</span>
+    <div className="flex justify-between items-center border-b border-[var(--border-subtle)] pb-2.5">
+      <span className="text-[11px] font-medium text-[var(--text-secondary)]">{label}</span>
       <span className={cn(
-        "text-sm font-mono font-bold",
-        status === 'good' ? "text-teal-400" : status === 'warning' ? "text-rose-400" : "text-cyan-400"
+        "text-[12px] font-bold font-[family-name:var(--font-jetbrains)]",
+        status === 'good' ? "text-[var(--ews-aman)]" : status === 'warning' ? "text-[var(--ews-awas)]" : "text-[var(--text-primary)]"
       )}>
         {value}
       </span>
@@ -304,15 +321,15 @@ function MetricRow({ label, value, status }: { label: string, value: string, sta
 
 function InputGroup({ label, defaultValue, unit }: { label: string, defaultValue: string, unit: string }) {
   return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">{label}</label>
+    <div className="flex flex-col gap-2">
+      <label className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-widest">{label}</label>
       <div className="relative">
         <input 
           type="text" 
           defaultValue={defaultValue}
-          className="w-full bg-[#020617] border border-cyan-900/50 rounded px-3 py-2 text-sm text-cyan-50 font-mono focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 focus:outline-none transition-all"
+          className="w-full bg-[var(--surface-bg)] border border-[var(--border-default)] rounded-lg px-4 py-2.5 text-[13px] text-[var(--text-primary)] font-[family-name:var(--font-jetbrains)] focus:border-[var(--brand-500)] focus:ring-2 focus:ring-[var(--brand-500)] focus:outline-none transition-all"
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-500">{unit}</span>
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-bold font-[family-name:var(--font-jetbrains)] text-[var(--text-muted)] bg-[var(--surface-inset)] px-2 py-0.5 rounded border border-[var(--border-subtle)]">{unit}</span>
       </div>
     </div>
   );

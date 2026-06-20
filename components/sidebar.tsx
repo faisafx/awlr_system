@@ -1,14 +1,8 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// components/sidebar.tsx
-// ─────────────────────────────────────────────────────────────────────────────
-
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useTheme } from 'next-themes';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Activity,
   BrainCircuit,
@@ -16,204 +10,320 @@ import {
   Cpu,
   Database,
   Settings,
-  ChevronLeft,
-  ChevronRight,
+  Menu, // Ikon hamburger baru
   Radio,
   DatabaseZap,
-  Sun,
-  Moon
+  X,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
-// ── 1. Type Definitions & Navigation ──────────────────────────────────────────
+// ── Nav structure ─────────────────────────────────────────────────────────────
+
 const NAV_ROUTES = [
   {
-    group: 'Operations',
+    group: 'Operasi',
     routes: [
-      { href: '/', label: 'Command Center', icon: Activity },
-      { href: '/analytics', label: 'AI Analytics (LSTM)', icon: BrainCircuit, badge: 'Live' },
-      { href: '/gis-topology', label: 'GIS & Topology', icon: Map },
+      { href: '/',              label: 'Command Center',      icon: Activity    },
+      { href: '/analytics',    label: 'AI Analytics (LSTM)', icon: BrainCircuit, badge: 'Live' },
+      { href: '/gis-topology', label: 'GIS & Topologi',       icon: Map         },
     ],
   },
   {
-    group: 'Infrastructure',
+    group: 'Infrastruktur',
     routes: [
-      { href: '/infrastructure', label: 'Device & Network', icon: Cpu, badge: 'Sync' },
+      { href: '/infrastructure', label: 'Perangkat & Jaringan', icon: Cpu, badge: 'Sync' },
     ],
   },
   {
-    group: 'System',
+    group: 'Sistem',
     routes: [
       { href: '/data-logs', label: 'Data Explorer', icon: Database },
-      { href: '/settings', label: 'Settings', icon: Settings },
+      { href: '/settings',  label: 'Pengaturan',    icon: Settings  },
     ],
   },
-];
+] as const;
 
-// ── 2. Animation Constants ────────────────────────────────────────────────────
-const sidebarVariants = {
-  expanded: { width: 260, transition: { type: 'spring', stiffness: 300, damping: 30 } },
-  collapsed: { width: 72, transition: { type: 'spring', stiffness: 300, damping: 30 } },
+// ── Badge colors ──────────────────────────────────────────────────────────────
+
+const BADGE_STYLE: Record<string, React.CSSProperties> = {
+  Live: { background: 'var(--ews-awas-bg)',    color: 'var(--ews-awas)',    border: '0.5px solid #FECACA' },
+  Sync: { background: 'var(--brand-50)',        color: 'var(--brand-700)',   border: '0.5px solid var(--brand-200)' },
 };
 
-const fadeSlideVariants = {
-  expanded: { opacity: 1, x: 0, display: 'block', transition: { delay: 0.1, duration: 0.2 } },
-  collapsed: { opacity: 0, x: -10, transition: { duration: 0.1 }, transitionEnd: { display: 'none' } },
-};
+// ── Sidebar ───────────────────────────────────────────────────────────────────
 
-// ── 3. Main Sidebar Component ─────────────────────────────────────────────────
 export function Sidebar() {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
-  const pathname = usePathname();
+  const [expanded, setExpanded] = useState(true);
+  const pathname                = usePathname();
+  const toggle                  = useCallback(() => setExpanded(p => !p), []);
 
-  // Mencegah Hydration Error dari next-themes
+  // Collapse sidebar by default on mobile
   useEffect(() => {
-    setMounted(true);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setExpanded(false);
+    }
   }, []);
 
-  const toggleSidebar = useCallback(() => setIsExpanded((prev) => !prev), []);
+  const W = expanded ? 240 : 64; // Lebar dinaikkan sedikit ke 240px agar muat untuk Hamburger Menu
 
   return (
-    <motion.aside
-      variants={sidebarVariants}
-      initial="expanded"
-      animate={isExpanded ? 'expanded' : 'collapsed'}
-      className="relative flex flex-col h-full bg-[#F5EBE1]/90 dark:bg-[#040A18]/80 backdrop-blur-xl border border-[#DBCFBF] dark:border-cyan-900/30 rounded-lg shadow-2xl shrink-0 z-30 transition-shadow duration-300"
-    >
-      {/* ── Brand Header ────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 h-20 px-4 border-b border-[#DBCFBF] dark:border-cyan-900/30 shrink-0 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#C28462]/10 dark:from-cyan-500/5 to-transparent opacity-50" />
-        
-        <div className="relative shrink-0 z-10">
-          <div className="w-10 h-10 rounded bg-[#EADDCB] dark:bg-cyan-950 border border-[#C28462]/50 dark:border-cyan-500/50 flex items-center justify-center">
-            <Activity className="w-5 h-5 text-[#C28462] dark:text-cyan-400" />
-          </div>
-          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#C28462] dark:bg-cyan-500 rounded-full border-2 border-[#F5EBE1] dark:border-[#040A18] animate-pulse" />
-        </div>
+    <>
+      {/* ── Mobile Hamburger Toggle (Outside Sidebar) ── */}
+      <button
+        className="md:hidden fixed top-[20px] left-[20px] z-[60] flex items-center justify-center w-8 h-8 rounded-lg bg-[var(--surface-card)] border border-[var(--border-subtle)] text-[var(--text-secondary)] shadow-sm hover:text-[var(--brand-600)] transition-colors"
+        onClick={toggle}
+        aria-label="Toggle Mobile Menu"
+      >
+        <Menu size={18} />
+      </button>
 
-        <motion.div variants={fadeSlideVariants} className="flex flex-col whitespace-nowrap z-10">
-          <h1 className="text-sm font-bold text-[#4A3F35] dark:text-slate-200 tracking-wide">
-            AWLR<span className="text-[#C28462] dark:text-cyan-400">.OPS</span>
-          </h1>
-          <span className="text-[10px] text-[#8C6D54] dark:text-slate-500 font-mono tracking-wider uppercase mt-0.5">
-            Node: Sungai Wanggu
+      {/* ── Mobile Overlay ── */}
+      {expanded && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/60 z-[40] backdrop-blur-sm transition-opacity"
+          onClick={() => setExpanded(false)}
+        />
+      )}
+
+      <aside
+        className={`fixed top-0 left-0 md:relative md:top-auto md:left-auto z-[70] md:z-20 h-[100dvh] md:h-full transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${expanded ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+        style={{
+          width: W,
+          minWidth: W,
+          background: 'var(--surface-card)',
+          borderRight: '1px solid var(--border-subtle)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          flexShrink: 0,
+          boxShadow: expanded ? '4px 0 24px rgba(0,0,0,0.4)' : 'none',
+        }}
+      >
+
+      {/* ── Brand header & Hamburger Toggle ── */}
+      <div
+        style={{
+          height: '72px', // Samakan dengan TopBar 72px
+          padding: expanded ? '0 16px' : '0',
+          borderBottom: '1px solid var(--border-subtle)',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: expanded ? 'space-between' : 'center',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Left: Spacer to push hamburger to right when expanded */}
+        <div style={{ flex: expanded ? 1 : 0, width: expanded ? 'auto' : '0px', opacity: expanded ? 1 : 0, transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
+          <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.15em', paddingLeft: '4px', display: expanded ? 'block' : 'none' }}>
+            Menu Navigasi
           </span>
-        </motion.div>
+        </div>
+        {/* Right: Hamburger Toggle / Close on Mobile */}
+        <button
+          onClick={toggle}
+          aria-label={expanded ? 'Tutup sidebar' : 'Buka sidebar'}
+          className="flex items-center justify-center w-[32px] h-[32px] rounded-lg bg-transparent border-none cursor-pointer text-[var(--text-secondary)] transition-all hover:bg-[var(--surface-inset)] hover:text-[var(--brand-600)] shrink-0"
+        >
+          {expanded ? (
+            <>
+              <Menu size={18} className="hidden md:block" />
+              <X size={18} className="block md:hidden" />
+            </>
+          ) : (
+            <Menu size={18} />
+          )}
+        </button>
       </div>
 
-      {/* ── Navigation Container ────────────────────────────────────────────── */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-6 px-3 space-y-6 custom-scrollbar">
+      {/* ── Nav ── */}
+      <nav
+        className="scrollbar-hide"
+        style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px 12px' }}
+      >
         {NAV_ROUTES.map(({ group, routes }) => (
-          <div key={group} className="flex flex-col">
-            <motion.div variants={fadeSlideVariants} className="text-[10px] font-bold uppercase tracking-widest text-[#8C6D54] dark:text-slate-500/70 px-3 pb-2 select-none">
-              {group}
-            </motion.div>
+          <div key={group} style={{ marginBottom: '16px' }}>
 
-            <ul className="space-y-1">
-              {routes.map((route) => {
-                const isActive = pathname === route.href || (route.href !== '/' && pathname.startsWith(`${route.href}/`));
-                const Icon = route.icon;
+            {/* Group label */}
+            <div
+              style={{
+                fontSize: '10px', fontWeight: 700, textTransform: 'uppercase',
+                letterSpacing: '0.12em', color: 'var(--text-disabled)',
+                padding: expanded ? '0 8px 8px' : '0',
+                height: expanded ? 'auto' : '1px',
+                margin: expanded ? '0' : '0 auto 16px',
+                width: expanded ? '100%' : '24px',
+                background: expanded ? 'transparent' : 'var(--border-subtle)',
+                textAlign: expanded ? 'left' : 'center',
+                userSelect: 'none',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                transition: 'all var(--duration-base)',
+              }}
+            >
+              <span style={{ opacity: expanded ? 1 : 0, transition: 'opacity 0.2s' }}>{group}</span>
+            </div>
 
-                return (
-                  <li key={route.href}>
-                    <Link href={route.href} passHref>
-                      <motion.div
-                        whileTap={{ scale: 0.98 }}
-                        className={cn(
-                          'relative flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors group',
-                          isActive ? 'bg-[#EADDCB] dark:bg-cyan-950/40' : 'hover:bg-white/50 dark:hover:bg-slate-800/40',
-                          !isExpanded && 'justify-center px-0'
-                        )}
-                      >
-                        {isActive && (
-                          <motion.div
-                            layoutId="activeNavIndicator"
-                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#C28462] dark:bg-cyan-400 rounded-r-md"
-                            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                          />
-                        )}
+            {/* Route items */}
+            {routes.map((route) => {
+              const isActive = pathname === route.href || (route.href !== '/' && pathname.startsWith(`${route.href}/`));
+              const Icon     = route.icon;
+              const badge    = (route as { badge?: string }).badge;
 
-                        <Icon 
-                          size={18} 
-                          className={cn('shrink-0 transition-colors', isActive ? 'text-[#C28462] dark:text-cyan-400' : 'text-[#8C6D54] dark:text-slate-500 group-hover:text-[#4A3F35] dark:group-hover:text-cyan-400')} 
-                          strokeWidth={isActive ? 2.5 : 1.5}
-                        />
+              return (
+                <Link key={route.href} href={route.href} style={{ textDecoration: 'none', display: 'block', marginBottom: '1px' }} title={!expanded ? route.label : undefined}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: expanded ? '7px 10px' : '0',
+                      height: expanded ? 'auto' : '38px',
+                      width: expanded ? 'auto' : '38px',
+                      justifyContent: expanded ? 'flex-start' : 'center',
+                      borderRadius: 'var(--radius-md)',
+                      margin: expanded ? '0' : '0 auto',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      transition: 'all var(--duration-fast) var(--ease-standard)',
+                      background: isActive ? 'var(--brand-50)' : 'transparent',
+                      border: isActive ? '0.5px solid var(--brand-200)' : '0.5px solid transparent',
+                      color: isActive ? 'var(--brand-700)' : 'var(--text-secondary)',
+                    }}
+                    onMouseEnter={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.background = 'var(--surface-inset)'; (e.currentTarget as HTMLElement).style.color = 'var(--brand-700)'; } }}
+                    onMouseLeave={e => { if (!isActive) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text-secondary)'; } }}
+                  >
+                    {isActive && (
+                      <div
+                        style={{
+                          position: 'absolute', left: expanded ? 0 : '-3px', top: '50%', transform: 'translateY(-50%)',
+                          width: '3px', height: '16px', background: 'var(--brand-600)',
+                          borderRadius: '0 3px 3px 0',
+                        }}
+                      />
+                    )}
 
-                        <motion.span variants={fadeSlideVariants} className={cn('flex-1 text-sm font-medium truncate', isActive ? 'text-[#4A3F35] dark:text-cyan-300' : 'text-[#8C6D54] dark:text-slate-400')}>
-                          {route.label}
-                        </motion.span>
+                    <Icon
+                      size={15}
+                      strokeWidth={isActive ? 2.5 : 1.8}
+                      style={{ flexShrink: 0, color: 'inherit' }}
+                    />
 
-                        {route.badge && (
-                          <motion.div variants={fadeSlideVariants}>
-                            <span className={cn(
-                              'px-1.5 py-0.5 rounded text-[9px] font-mono font-bold tracking-wider border',
-                              route.badge === 'Live' ? 'bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border-rose-300 dark:border-rose-500/50' :
-                              route.badge === 'Sync' ? 'bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-500/50' :
-                              'bg-[#FDF8F5] dark:bg-cyan-950/50 text-[#C28462] dark:text-cyan-400 border-[#DBCFBF] dark:border-cyan-500/50'
-                            )}>
-                              {route.badge}
-                            </span>
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+                    {/* Label + badge */}
+                    <div
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '6px', flex: 1,
+                        opacity: expanded ? 1 : 0,
+                        maxWidth: expanded ? '180px' : '0px', // Animasi lipat untuk teks nav
+                        transition: 'all var(--duration-base) var(--ease-standard)',
+                        pointerEvents: expanded ? 'auto' : 'none',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <span style={{ fontSize: '12px', fontWeight: isActive ? 600 : 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {route.label}
+                      </span>
+                      {badge && (
+                        <span
+                          style={{
+                            ...BADGE_STYLE[badge],
+                            fontSize: '9px', fontFamily: 'var(--font-jetbrains), monospace',
+                            fontWeight: 700, padding: '1px 5px', borderRadius: '4px',
+                            letterSpacing: '0.04em', flexShrink: 0,
+                          }}
+                        >
+                          {badge}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         ))}
       </nav>
 
-      {/* ── System Status Footer & THEME SWITCHER ─────────────────────────── */}
-      <div className="border-t border-[#DBCFBF] dark:border-cyan-900/30 bg-[#FDF8F5]/50 dark:bg-black/20 shrink-0 p-4 relative overflow-hidden">
-        <motion.div variants={fadeSlideVariants} className="relative z-10 flex flex-col gap-3">
-          
-          {/* THEME SWITCHER ADA DI SINI */}
-          {mounted && (
-            <div className="flex items-center justify-between border-b border-[#DBCFBF] dark:border-white/5 pb-3 mb-1">
-              <span className="text-[11px] font-mono text-[#8C6D54] dark:text-slate-500">Visual Mode</span>
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="p-1.5 rounded-md transition-colors bg-[#EADDCB] hover:bg-[#DBCFBF] text-[#8C6D54] dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-cyan-400"
-                aria-label="Toggle Theme"
-              >
-                {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-              </button>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[#8C6D54] dark:text-slate-500">
-              <Radio size={14} className="text-blue-500 dark:text-cyan-400" />
-              <span className="text-[11px] font-mono">Uplink Status</span>
-            </div>
-            <span className="text-[11px] font-mono text-blue-600 dark:text-cyan-400 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-cyan-400 animate-pulse"></span>
-              14ms
+      {/* ── Footer: system status ── */}
+      <div
+        style={{
+          borderTop: '1px solid var(--border-subtle)',
+          background: 'var(--surface-inset)',
+          padding: expanded ? '10px 12px' : '10px 0',
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '7px',
+          overflow: 'hidden',
+          transition: 'padding var(--duration-base) var(--ease-standard)',
+        }}
+      >
+        {/* Uplink status */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: expanded ? 'space-between' : 'center', height: '18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title={!expanded ? "Uplink MQTT: 14ms" : undefined}>
+            <Radio size={12} style={{ color: 'var(--brand-500)', flexShrink: 0 }} />
+            <span
+              style={{
+                fontSize: '10px', fontFamily: 'var(--font-jetbrains), monospace', color: 'var(--text-muted)',
+                opacity: expanded ? 1 : 0, maxWidth: expanded ? '100px' : '0px', 
+                overflow: 'hidden', transition: 'all var(--duration-base)', whiteSpace: 'nowrap',
+              }}
+            >
+              Uplink MQTT
             </span>
           </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[#8C6D54] dark:text-slate-500">
-              <DatabaseZap size={14} className="text-teal-600 dark:text-teal-400" />
-              <span className="text-[11px] font-mono">LSTM Engine</span>
-            </div>
-            <span className="text-[11px] font-mono text-teal-600 dark:text-teal-400">Standby</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', opacity: expanded ? 1 : 0, maxWidth: expanded ? '50px' : '0px', overflow: 'hidden', transition: 'all var(--duration-base)' }}>
+            <span className="status-dot live" style={{ width: '5px', height: '5px' }} />
+            <span style={{ fontSize: '10px', fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 600, color: 'var(--brand-600)' }}>
+              14 ms
+            </span>
           </div>
-        </motion.div>
+        </div>
+
+        {/* LSTM engine */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: expanded ? 'space-between' : 'center', height: '18px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }} title={!expanded ? "Model LSTM: Standby" : undefined}>
+            <DatabaseZap size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+            <span
+              style={{
+                fontSize: '10px', fontFamily: 'var(--font-jetbrains), monospace', color: 'var(--text-muted)',
+                opacity: expanded ? 1 : 0, maxWidth: expanded ? '100px' : '0px',
+                overflow: 'hidden', transition: 'all var(--duration-base)', whiteSpace: 'nowrap',
+              }}
+            >
+              Model LSTM
+            </span>
+          </div>
+          <span
+            style={{
+              fontSize: '10px', fontFamily: 'var(--font-jetbrains), monospace', color: 'var(--text-disabled)',
+              opacity: expanded ? 1 : 0, maxWidth: expanded ? '50px' : '0px',
+              overflow: 'hidden', transition: 'all var(--duration-base)', whiteSpace: 'nowrap',
+            }}
+          >
+            Standby
+          </span>
+        </div>
+
+        {/* Version line */}
+        <div
+          style={{
+            paddingTop: '6px', borderTop: '1px solid var(--border-subtle)',
+            display: 'flex', justifyContent: 'space-between',
+            opacity: expanded ? 1 : 0, maxHeight: expanded ? '20px' : '0px',
+            overflow: 'hidden', transition: 'all var(--duration-base) var(--ease-standard)',
+          }}
+        >
+          <span style={{ fontSize: '9px', fontFamily: 'var(--font-jetbrains), monospace', color: 'var(--text-disabled)', whiteSpace: 'nowrap' }}>
+            BBWS Sulawesi IV · v2.1.0
+          </span>
+          <span style={{ fontSize: '9px', fontFamily: 'var(--font-jetbrains), monospace', color: 'var(--text-disabled)', whiteSpace: 'nowrap' }}>
+            60s
+          </span>
+        </div>
       </div>
 
-      {/* ── Toggle Control ──────────────────────────────────────────────────── */}
-      <motion.button
-        onClick={toggleSidebar}
-        whileTap={{ scale: 0.9 }}
-        className="absolute -right-3 top-8 z-50 w-6 h-6 rounded border border-[#C28462]/50 dark:border-cyan-500/50 bg-[#F5EBE1] dark:bg-[#040A18] text-[#C28462] dark:text-cyan-400 flex items-center justify-center transition-colors hover:text-[#4A3F35] dark:hover:text-cyan-300"
-      >
-        {isExpanded ? <ChevronLeft size={14} strokeWidth={2.5} /> : <ChevronRight size={14} strokeWidth={2.5} />}
-      </motion.button>
-    </motion.aside>
+    </aside>
+    </>
   );
 }

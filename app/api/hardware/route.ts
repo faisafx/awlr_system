@@ -1,86 +1,126 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // File: app/api/hardware/route.ts
-// Architecture: Next.js 14 App Router (API Route Handler)
-// Description: Endpoint untuk menarik data riil inventaris alat dari database.
+// Architecture: Next.js 14 App Router
+// Description: Endpoint GET Infrastruktur dengan Auto-Seeding Prisma
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
-// Skema data yang wajib dipatuhi oleh database/API
-export interface HardwareAssetSchema {
-  asset_code: string;
-  component_name: string;
-  model_number: string;
-  installation_date: string;
-  operating_hours: number;
-  health_index: number;
-  calibration_due_days: number;
-  technician: string;
-  node_assignment: string;
-  criticality: 'HIGH' | 'MEDIUM' | 'LOW';
-}
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // DI SINI: Hubungkan ke ORM Anda (Prisma/Drizzle) atau query SQL langsung
-    // Contoh: const assets = await db.select().from(hardwareTable);
-    
-    // Representasi data riil dari tabel database BWS Sulawesi IV
-    const realDatabaseRecords: HardwareAssetSchema[] = [
-      {
-        asset_code: 'BMN-AWLR-WGG01-001',
-        component_name: 'Hydrostatic Pressure Transducer',
-        model_number: 'QDY30A (0-3.3V Varian Tegangan)',
-        installation_date: '2025-03-12',
-        operating_hours: 10680,
-        health_index: 82,
-        calibration_due_days: 14,
-        technician: 'Faisal Fardani',
-        node_assignment: 'Jembatan Wanggu',
-        criticality: 'HIGH'
-      },
-      {
-        asset_code: 'BMN-AWLR-WGG01-002',
-        component_name: 'Waterproof Ultrasonic Distance',
-        model_number: 'A02YYUW (Serial UART)',
-        installation_date: '2025-03-12',
-        operating_hours: 10680,
-        health_index: 91,
-        calibration_due_days: 102,
-        technician: 'Faisal Fardani',
-        node_assignment: 'Jembatan Wanggu',
-        criticality: 'HIGH'
-      },
-      {
-        asset_code: 'BMN-AWLR-WGG01-003',
-        component_name: 'Tipping Bucket Ombrometer',
-        model_number: 'RG-3M Stainless Steel Pulse',
-        installation_date: '2025-05-05',
-        operating_hours: 9430,
-        health_index: 74,
-        calibration_due_days: 45,
-        technician: 'Munirkhan Genius',
-        node_assignment: 'Kolam Retensi Boulevard',
-        criticality: 'MEDIUM'
-      },
-      {
-        asset_code: 'BMN-AWLR-CORE-001',
-        component_name: 'Main Processing Unit MCU',
-        model_number: 'ESP32-WROOM-32E Dev Carrier',
-        installation_date: '2025-03-12',
-        operating_hours: 10680,
-        health_index: 98,
-        calibration_due_days: 365,
-        technician: 'Faisal Fardani',
-        node_assignment: 'Jembatan Wanggu',
-        criticality: 'HIGH'
-      }
-    ];
+    // 1. Coba tarik data dari database riil
+    let assets = await prisma.hardwareAsset.findMany({
+      orderBy: { criticality: 'asc' }
+    });
 
-    return NextResponse.json({ status: 'success', data: realDatabaseRecords });
-  } catch (error) {
+    // 2. Jika database kosong (pertama kali deploy), lakukan Auto-Seeding
+    if (assets.length === 0) {
+      const initialSeedData = [
+        {
+          assetCode: 'BMN-AWLR-WGG01-001',
+          componentName: 'Hydrostatic Pressure Transducer',
+          modelNumber: 'QDY30A (0-3.3V Analog)',
+          installationDate: new Date('2025-03-12'),
+          operatingHours: 10680,
+          healthIndex: 82,
+          calibrationDueDays: 14,
+          technician: 'Faisal Fardani',
+          nodeAssignment: 'Jembatan Wanggu',
+          criticality: 'HIGH'
+        },
+        {
+          assetCode: 'BMN-AWLR-WGG01-002',
+          componentName: 'Waterproof Ultrasonic Distance',
+          modelNumber: 'A02YYUW (Serial UART)',
+          installationDate: new Date('2025-03-12'),
+          operatingHours: 10680,
+          healthIndex: 91,
+          calibrationDueDays: 102,
+          technician: 'Faisal Fardani',
+          nodeAssignment: 'Jembatan Wanggu',
+          criticality: 'HIGH'
+        },
+        {
+          assetCode: 'BMN-AWLR-WGG01-003',
+          componentName: 'Tipping Bucket Ombrometer',
+          modelNumber: 'RG-3M Stainless Steel Pulse',
+          installationDate: new Date('2025-05-05'),
+          operatingHours: 9430,
+          healthIndex: 74,
+          calibrationDueDays: 45,
+          technician: 'Munirkhan Genius',
+          nodeAssignment: 'Kolam Retensi Boulevard',
+          criticality: 'MEDIUM'
+        },
+        {
+          assetCode: 'BMN-AWLR-WGG01-004',
+          componentName: 'Turbine Water Flow Sensor',
+          modelNumber: 'DN50 2 Inch (Pulse Output)',
+          installationDate: new Date('2026-06-15'),
+          operatingHours: 96,
+          healthIndex: 100,
+          calibrationDueDays: 360,
+          technician: 'Faisal Fardani',
+          nodeAssignment: 'Saluran Inlet Wanggu',
+          criticality: 'HIGH'
+        },
+        {
+          assetCode: 'BMN-AWLR-CORE-001',
+          componentName: 'Main Processing Unit MCU',
+          modelNumber: 'ESP32-WROOM-32E Dev Carrier',
+          installationDate: new Date('2025-03-12'),
+          operatingHours: 10680,
+          healthIndex: 98,
+          calibrationDueDays: 365,
+          technician: 'Faisal Fardani',
+          nodeAssignment: 'Jembatan Wanggu',
+          criticality: 'HIGH'
+        },
+        {
+          assetCode: 'BMN-AWLR-COM-001',
+          componentName: 'Long Range Transceiver',
+          modelNumber: 'LoRa SPI SX1276 915MHz',
+          installationDate: new Date('2025-03-12'),
+          operatingHours: 10680,
+          healthIndex: 95,
+          calibrationDueDays: 365,
+          technician: 'Munirkhan Genius',
+          nodeAssignment: 'Jembatan Wanggu',
+          criticality: 'MEDIUM'
+        },
+        {
+          assetCode: 'BMN-AWLR-ACT-001',
+          componentName: 'Sirine & Alarm Actuator',
+          modelNumber: 'Dual Channel Relay 5V',
+          installationDate: new Date('2025-03-12'),
+          operatingHours: 10680,
+          healthIndex: 88,
+          calibrationDueDays: 120,
+          technician: 'Faisal Fardani',
+          nodeAssignment: 'Jembatan Wanggu',
+          criticality: 'MEDIUM'
+        }
+      ];
+
+      // Insert ke database menggunakan Prisma
+      await prisma.hardwareAsset.createMany({
+        data: initialSeedData as any,
+      });
+
+      // Tarik ulang setelah seeding
+      assets = await prisma.hardwareAsset.findMany({
+        orderBy: { criticality: 'asc' }
+      });
+    }
+
+    return NextResponse.json({ success: true, data: assets }, { status: 200 });
+  } catch (error: any) {
+    console.error('[INFRA REGISTRY ERROR]:', error.message);
     return NextResponse.json(
-      { status: 'error', message: 'Gagal mengekstrak data dari database infrastruktur.' },
+      { success: false, error: 'Gagal mengekstrak data dari database infrastruktur.' },
       { status: 500 }
     );
   }

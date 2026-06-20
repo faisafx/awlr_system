@@ -1,12 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// File: components/map/JarvisMap.tsx
-// Description: J.A.R.V.I.S HUD Style Leaflet Map for Sungai Wanggu.
-// Features: Holographic Crosshairs, Radar Sweeps, and Hex Grid Overlays.
+// File: components/map/GISMap.tsx
+// Architecture: Next.js 14 Client Component
+// Project: Full-Stack AWLR Command Center - Sungai Wanggu, Kendari
+// Description: Enterprise-grade GIS Map. Clean, modern, Google Cloud aesthetic.
+//              Features solid marker iconography and geospatial tracking overlays.
 // ─────────────────────────────────────────────────────────────────────────────
 
 'use client';
 
-import { MapContainer, TileLayer, Marker, Popup, Polygon, Circle, LayersControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polygon, Circle, LayersControl, ScaleControl } from 'react-leaflet';
 import L from 'leaflet';
 import { useEffect, useState } from 'react';
 
@@ -20,98 +22,174 @@ const WANGGU_RIVER_TRACK: [number, number][] = [
   [-4.0175, 122.5152], [-4.008, 122.522], [-3.995, 122.528],
 ];
 
-// ── J.A.R.V.I.S HUD CUSTOM ICONS ──────────────────────────────────────────────
-const createHudTargetIcon = (status: 'ONLINE' | 'OFFLINE' | 'WARNING') => {
-  const color = status === 'WARNING' ? '#ef4444' : status === 'OFFLINE' ? '#64748b' : '#06b6d4';
-  const glow = status === 'WARNING' ? 'rgba(239, 68, 68, 0.5)' : status === 'OFFLINE' ? 'transparent' : 'rgba(6, 182, 212, 0.5)';
+// ── ENTERPRISE CUSTOM ICONS ──────────────────────────────────────────────────
+// Marker untuk Node Sensor Utama (Merespons status telemetri)
+const createPrimaryNodeIcon = (status: 'ONLINE' | 'OFFLINE' | 'WARNING') => {
+  const colorHex = status === 'WARNING' ? 'var(--ews-awas)' : status === 'OFFLINE' ? 'var(--text-disabled)' : 'var(--brand-500)';
+  const bgHex = status === 'WARNING' ? 'var(--ews-awas-bg)' : status === 'OFFLINE' ? 'var(--surface-inset)' : 'var(--brand-50)';
   
   return L.divIcon({
     className: 'clear-default',
     html: `
-      <div style="position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-        <div style="position: absolute; width: 100%; height: 100%; border: 1px solid ${color}; border-radius: 50%; border-top-color: transparent; border-bottom-color: transparent; animation: spin 4s linear infinite; box-shadow: 0 0 10px ${glow};"></div>
-        <div style="width: 8px; height: 8px; background-color: ${color}; border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; box-shadow: 0 0 15px ${color};"></div>
-        <div style="position: absolute; width: 2px; height: 10px; background-color: ${color}; top: -5px;"></div>
-        <div style="position: absolute; width: 2px; height: 10px; background-color: ${color}; bottom: -5px;"></div>
-        <div style="position: absolute; width: 10px; height: 2px; background-color: ${color}; left: -5px;"></div>
-        <div style="position: absolute; width: 10px; height: 2px; background-color: ${color}; right: -5px;"></div>
+      <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+        <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; background-color: ${bgHex}; border: 2px solid ${colorHex}; opacity: 0.8; ${status !== 'OFFLINE' ? 'animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite;' : ''}"></div>
+        <div style="position: relative; z-index: 10; width: 16px; height: 16px; background-color: ${colorHex}; border-radius: 50%; border: 3px solid var(--surface-card);"></div>
       </div>
       <style>
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes ping { 75%, 100% { transform: scale(2.5); opacity: 0; } }
+        @keyframes ping-slow {
+          0% { transform: scale(0.8); opacity: 0.8; }
+          100% { transform: scale(1.6); opacity: 0; }
+        }
       </style>
     `,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
   });
 };
 
-const createHexIcon = () => {
+// Marker untuk Infrastruktur Statis (Kolam Retensi)
+const createStaticInfraIcon = () => {
   return L.divIcon({
     className: 'clear-default',
     html: `
-      <div style="width: 30px; height: 30px; background: rgba(59, 130, 246, 0.2); border: 1.5px solid #3b82f6; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);">
-        <div style="width: 4px; height: 4px; background: #60a5fa; border-radius: 50%; box-shadow: 0 0 8px #93c5fd;"></div>
+      <div style="width: 28px; height: 28px; background: var(--surface-card); border: 2px solid var(--brand-600); border-radius: 6px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div style="width: 10px; height: 10px; background: var(--brand-500); border-radius: 2px;"></div>
       </div>
     `,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
   });
 };
 
-interface JarvisMapProps {
+interface GISMapProps {
   hardwareStatus: 'ONLINE' | 'OFFLINE' | 'WARNING';
 }
 
-export default function JarvisMap({ hardwareStatus }: JarvisMapProps) {
+export default function GISMap({ hardwareStatus }: GISMapProps) {
   const [mounted, setMounted] = useState(false);
-  const [radarRadius, setRadarRadius] = useState(100);
+  const [coverageRadius, setCoverageRadius] = useState(2000); // 2km default coverage area
 
   useEffect(() => {
     setMounted(true);
-    // Radar ping animation
+    // Subtle pulsing effect for the coverage area instead of harsh radar sweeps
     const interval = setInterval(() => {
-      setRadarRadius(prev => prev >= 2500 ? 100 : prev + 300);
-    }, 150);
+      setCoverageRadius(prev => prev === 2000 ? 2050 : 2000);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
   if (!mounted) return null;
 
   return (
-    <MapContainer center={KENDARI_CENTER} zoom={14} style={{ height: '100%', width: '100%', backgroundColor: '#020617' }} zoomControl={false}>
-      {/* Base Layer: CartoDB Dark Matter (Perfect for HUDs) */}
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+    <MapContainer 
+      center={KENDARI_CENTER} 
+      zoom={14} 
+      style={{ height: '100%', width: '100%', backgroundColor: 'var(--surface-inset)', borderRadius: 'inherit', zIndex: 0 }} 
+      zoomControl={true}
+    >
+      <ScaleControl position="bottomleft" imperial={false} metric={true} />
 
-      {/* Simulated Hexagonal Grid Overlay for Tech Aesthetic */}
-      <TileLayer 
-        url="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHBhdGggZD0iTTAgMjBMMTAgMEwzMCAwTDQwIDIwTDMwIDQwTDEwIDQwWSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDYsIDE4MiwgMjEyLCAwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9zdmc+" 
-        opacity={0.8} 
-      />
+      <LayersControl position="topright">
+        
+        {/* Base Layer: Modern Light Map (Google style) */}
+        <LayersControl.BaseLayer checked name="Light Map">
+          <TileLayer 
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" 
+            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
+          />
+        </LayersControl.BaseLayer>
 
-      {/* Holographic River Trace */}
-      <Polygon 
-        positions={WANGGU_RIVER_TRACK}
-        pathOptions={{ color: '#06b6d4', weight: 2, fillColor: 'transparent', opacity: 0.8, dashArray: '4 8' }}
-      />
+        {/* Alternative Layer: Satellite Imagery */}
+        <LayersControl.BaseLayer name="Satellite">
+          <TileLayer 
+            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" 
+            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+          />
+        </LayersControl.BaseLayer>
 
-      {/* Radar Sweep Effect at Node */}
-      {hardwareStatus !== 'OFFLINE' && (
-        <Circle 
-          center={JEMBATAN_WANGGU_AWLR} 
-          radius={radarRadius} 
-          pathOptions={{ color: '#06b6d4', weight: 1, fillColor: 'transparent', opacity: 1 - (radarRadius / 2500) }} 
-        />
-      )}
+        {/* Overlay: River Trase */}
+        <LayersControl.Overlay checked name="Trase Sungai Wanggu">
+          <Polygon 
+            positions={WANGGU_RIVER_TRACK}
+            pathOptions={{ 
+              color: 'var(--brand-500)', 
+              weight: 4, 
+              fillColor: 'var(--brand-200)', 
+              fillOpacity: 0.3, 
+              lineJoin: 'round',
+            }}
+          />
+        </LayersControl.Overlay>
+
+        {/* Overlay: Sensor Coverage Area */}
+        {hardwareStatus !== 'OFFLINE' && (
+          <LayersControl.Overlay checked name="Radius Komunikasi Node">
+            <Circle 
+              center={JEMBATAN_WANGGU_AWLR} 
+              radius={coverageRadius} 
+              pathOptions={{ 
+                color: 'var(--brand-300)', 
+                weight: 1, 
+                fillColor: 'var(--brand-50)', 
+                fillOpacity: 0.2,
+                dashArray: '5, 10'
+              }} 
+            />
+          </LayersControl.Overlay>
+        )}
+
+      </LayersControl>
 
       {/* Target Markers */}
-      <Marker position={KOLAM_RETENSI_BOULEVARD} icon={createHexIcon()}>
-        <Popup className="hud-popup"><span style={{ fontFamily: 'monospace', color: '#60a5fa' }}>// INFRA: RETENTION_POND_01</span></Popup>
+      <Marker position={KOLAM_RETENSI_BOULEVARD} icon={createStaticInfraIcon()}>
+        <Popup className="enterprise-popup">
+          <div style={{ fontFamily: 'var(--font-jetbrains), monospace', fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+            INFRA: KOLAM RETENSI BWS IV
+          </div>
+        </Popup>
       </Marker>
 
-      <Marker position={JEMBATAN_WANGGU_AWLR} icon={createHudTargetIcon(hardwareStatus)}>
-        <Popup className="hud-popup"><span style={{ fontFamily: 'monospace', color: '#06b6d4' }}>// NODE: AWLR_WGG_01</span></Popup>
+      <Marker position={JEMBATAN_WANGGU_AWLR} icon={createPrimaryNodeIcon(hardwareStatus)}>
+        <Popup className="enterprise-popup">
+          <div style={{ fontFamily: 'var(--font-jetbrains), monospace', fontSize: '11px', fontWeight: 700, color: hardwareStatus === 'WARNING' ? 'var(--ews-awas)' : 'var(--brand-600)' }}>
+            NODE: AWLR_WGG_01 [{hardwareStatus}]
+          </div>
+        </Popup>
       </Marker>
+
+      {/* ── CSS KHUSUS UNTUK POPUP LEAFLET ENTERPRISE ── */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .enterprise-popup .leaflet-popup-content-wrapper {
+          background: var(--surface-card);
+          border: 1px solid var(--border-subtle);
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-sm);
+          padding: 2px 4px;
+        }
+        .enterprise-popup .leaflet-popup-content {
+          margin: 8px 12px;
+          line-height: 1.4;
+        }
+        .enterprise-popup .leaflet-popup-tip {
+          background: var(--surface-card);
+          border: 1px solid var(--border-subtle);
+          border-top: none;
+          border-left: none;
+        }
+        .leaflet-control-layers-toggle {
+          background-color: var(--surface-card) !important;
+          border-radius: var(--radius-sm) !important;
+          border: 1px solid var(--border-subtle) !important;
+        }
+        .leaflet-bar a {
+          background-color: var(--surface-card) !important;
+          color: var(--text-primary) !important;
+          border-bottom: 1px solid var(--border-subtle) !important;
+        }
+        .leaflet-bar a:hover {
+          background-color: var(--surface-inset) !important;
+        }
+      `}} />
     </MapContainer>
   );
 }

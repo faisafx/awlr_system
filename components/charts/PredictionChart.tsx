@@ -7,21 +7,22 @@ import * as echarts from 'echarts/core';
 interface PredictionChartProps {
   historical: { timestamp: number; value: number }[];
   forecast: { timestamp: number; value: number; upperConfidence: number; lowerConfidence: number }[];
+  metricLabel?: string;
+  unit?: string;
+  baseColor?: string;
+  max?: number;
 }
 
-export default function PredictionChart({ historical, forecast }: PredictionChartProps) {
+export default function PredictionChart({ historical, forecast, metricLabel = 'TMA', unit = 'm', baseColor = '#14b8a6', max = 5 }: PredictionChartProps) {
   const option = useMemo(() => {
-    // Satukan format data untuk konsumsi koordinat x,y ECharts [Timestamp, Value]
     const historySeries = historical.map(item => [item.timestamp, item.value]);
+    const lastHistoryPoint = historySeries[historySeries.length - 1] ?? [Date.now(), 0];
     
-    // Titik sambung: ambil titik terakhir dari histori agar garis grafis tidak terputus
-    const lastHistoryPoint = historySeries[historySeries.length - 1];
     const forecastSeries = [
       lastHistoryPoint,
       ...forecast.map(item => [item.timestamp, item.value])
     ];
 
-    // Upper dan Lower Bounds untuk area ketidakpastian (Confidence Band)
     const upperSeries = [
       [lastHistoryPoint[0], lastHistoryPoint[1]],
       ...forecast.map(item => [item.timestamp, item.upperConfidence])
@@ -41,7 +42,7 @@ export default function PredictionChart({ historical, forecast }: PredictionChar
         textStyle: { color: '#f1f5f9', fontSize: 11, fontFamily: 'monospace' }
       },
       legend: {
-        data: ['TMA Aktual (Histori)', 'Prediksi LSTM (6 Jam Depan)', 'Rentang Keyakinan'],
+        data: [`${metricLabel} Aktual (Histori)`, 'Prediksi LSTM (6 Jam Depan)', 'Rentang Keyakinan'],
         top: 0,
         textStyle: { color: '#94a3b8', fontSize: 11 }
       },
@@ -55,23 +56,23 @@ export default function PredictionChart({ historical, forecast }: PredictionChar
       yAxis: {
         type: 'value',
         min: 0,
-        max: 5,
-        name: 'TMA (Meter)',
+        max: max,
+        name: `${metricLabel} (${unit})`,
         nameTextStyle: { color: '#64748b', fontSize: 10 },
         axisLabel: { color: '#94a3b8', fontSize: 10 },
         splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)', type: 'dashed' } }
       },
       series: [
         {
-          name: 'TMA Aktual (Histori)',
+          name: `${metricLabel} Aktual (Histori)`,
           type: 'line',
           data: historySeries,
           smooth: true,
           showSymbol: false,
-          lineStyle: { color: '#14b8a6', width: 2.5 },
+          lineStyle: { color: baseColor, width: 2.5 },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(20, 184, 166, 0.15)' },
+              { offset: 0, color: baseColor.replace('rgb', 'rgba').replace(')', ', 0.15)').replace('#14b8a6', 'rgba(20, 184, 166, 0.15)') },
               { offset: 1, color: 'rgba(20, 184, 166, 0)' }
             ])
           }
@@ -83,7 +84,7 @@ export default function PredictionChart({ historical, forecast }: PredictionChar
           smooth: true,
           showSymbol: true,
           symbolSize: 6,
-          lineStyle: { color: '#a855f7', width: 2.5, type: 'dashed' }, // Warna ungu neon untuk visualisasi AI
+          lineStyle: { color: '#a855f7', width: 2.5, type: 'dashed' },
           itemStyle: { color: '#c084fc' }
         },
         {
@@ -100,12 +101,12 @@ export default function PredictionChart({ historical, forecast }: PredictionChar
           data: lowerSeries,
           lineStyle: { opacity: 0 },
           stack: 'confidence-band',
-          areaStyle: { color: 'rgba(168, 85, 247, 0.06)' }, // Efek bayangan transparansi prediksi
+          areaStyle: { color: 'rgba(168, 85, 247, 0.06)' },
           showSymbol: false
         }
       ]
     };
-  }, [historical, forecast]);
+  }, [historical, forecast, metricLabel, unit, baseColor, max]);
 
   return <ReactECharts option={option} style={{ height: '100%', width: '100%' }} />;
 }

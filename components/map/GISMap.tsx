@@ -15,7 +15,6 @@ import { Radio, ShieldAlert, Anchor, MapPin, Activity, Navigation } from 'lucide
 import { cn } from '@/lib/utils';
 
 // ── KOORDINAT RIIL INFRASTRUKTUR SUNGAI WANGGU, KENDARI ──────────────────────
-// Dikalibrasi presisi tinggi untuk citra satelit
 const KENDARI_CENTER: [number, number] = [-4.025, 122.510];
 
 // 1. Kolam Retensi Boulevard (Fasilitas Pengendali Banjir Utama - BWS Sulawesi IV)
@@ -34,18 +33,19 @@ const WANGGU_RIVER_TRACK: [number, number][] = [
   [-3.995000, 122.528000], // Muara Teluk Kendari
 ];
 
-// ── KUSTOMISASI MARKER TIKTIKAL (DIOPTIMALKAN UNTUK LATAR SATELIT) ───────────
-const createTacticalNodeIcon = (status: string, size: number = 28) => {
-  const colorClass = status === 'AWAS' ? 'bg-rose-500' : status === 'SIAGA' ? 'bg-orange-500' : 'bg-cyan-500';
-  const borderColorClass = status === 'AWAS' ? 'border-rose-300' : status === 'SIAGA' ? 'border-orange-300' : 'border-cyan-300';
+// ── KUSTOMISASI MARKER MODERN (CLOUD DASHBOARD STYLE) ───────────
+const createTacticalNodeIcon = (status: string, size: number = 32) => {
+  // Mapping ke variabel EWS yang sudah ada di CSS
+  const colorHex = status === 'AWAS' ? '#B91C1C' : status === 'SIAGA' ? '#C2410C' : '#1A7F3C';
+  const bgHex = status === 'AWAS' ? '#FEF2F2' : status === 'SIAGA' ? '#FFF7ED' : '#F0FDF4';
   
   return L.divIcon({
     className: 'custom-div-icon',
     html: `
-      <div class="relative flex items-center justify-center drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)]" style="width: ${size}px; height: ${size}px;">
-        <span class="absolute inline-flex h-full w-full rounded-full animate-ping opacity-80 ${colorClass}"></span>
-        <span class="relative flex items-center justify-center rounded-full border-2 ${borderColorClass} ${colorClass}" style="width: ${size/1.5}px; height: ${size/1.5}px;">
-          <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+      <div class="relative flex items-center justify-center drop-shadow-md" style="width: ${size}px; height: ${size}px;">
+        <span class="absolute inline-flex h-full w-full rounded-full animate-ping opacity-60" style="background-color: ${colorHex};"></span>
+        <span class="relative flex items-center justify-center rounded-full border-2" style="width: ${size/1.4}px; height: ${size/1.4}px; background-color: ${bgHex}; border-color: ${colorHex};">
+          <div class="w-2 h-2 rounded-full" style="background-color: ${colorHex};"></div>
         </span>
       </div>
     `,
@@ -58,8 +58,8 @@ const createInfrastructureIcon = () => {
   return L.divIcon({
     className: 'custom-div-icon',
     html: `
-      <div class="relative flex items-center justify-center w-8 h-8 rounded-md bg-blue-600/80 border-2 border-white backdrop-blur-md shadow-[0_5px_15px_rgba(0,0,0,0.7)]">
-        <div class="w-3 h-3 rounded-sm bg-white animate-pulse"></div>
+      <div class="relative flex items-center justify-center w-8 h-8 rounded-lg border-2 shadow-md" style="background-color: var(--brand-50); border-color: var(--brand-500);">
+        <div class="w-3 h-3 rounded-sm animate-pulse" style="background-color: var(--brand-600);"></div>
       </div>
     `,
     iconSize: [32, 32],
@@ -75,7 +75,7 @@ export default function GISMap() {
   useEffect(() => {
     setMounted(true);
     const interval = setInterval(() => {
-      setRadarIntensity(prev => (prev === 0.4 ? 0.1 : 0.4));
+      setRadarIntensity(prev => (prev === 0.4 ? 0.15 : 0.4));
     }, 2000);
     return () => clearInterval(interval);
   }, []);
@@ -83,82 +83,87 @@ export default function GISMap() {
   if (!mounted) return null;
 
   return (
-    <div className="w-full h-full relative z-10 bg-[#0a0a0a]">
+    <div className="w-full h-full relative z-10 bg-[var(--surface-inset)] rounded-[inherit]">
       
-      {/* ── PANEL LEGENDA TIKTIKAL (Glassmorphism Profesional) ── */}
-      <div className="absolute bottom-6 left-4 z-[1000] bg-slate-950/90 border border-white/10 p-4 rounded-xl backdrop-blur-xl text-[11px] font-mono space-y-3 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-        <div className="text-slate-300 border-b border-white/10 pb-2 uppercase font-bold text-[10px] tracking-widest flex items-center gap-2">
-          <Navigation size={14} className="text-cyan-400" /> Legenda Topografi
+      {/* ── PANEL LEGENDA TIKTIKAL (Modern Glassmorphism) ── */}
+      <div className="absolute bottom-6 left-4 z-[1000] glass-panel p-4 rounded-xl text-[11px] font-[family-name:var(--font-inter)] space-y-3 shadow-lg min-w-[220px]">
+        
+        <div className="text-[var(--text-primary)] border-b border-[var(--border-subtle)] pb-2 uppercase font-bold text-[10px] tracking-widest flex items-center gap-2">
+          <Navigation size={14} className="text-[var(--brand-600)]" /> 
+          Legenda Topografi
         </div>
+
         <div className="flex items-center gap-3">
-          <div className="w-4 h-4 rounded-[4px] bg-blue-600/80 border border-white shadow-sm flex items-center justify-center"><div className="w-1 h-1 bg-white rounded-full"></div></div>
-          <span className="text-slate-300">Kolam Retensi BWS IV</span>
+          <div className="w-4 h-4 rounded-[4px] border flex items-center justify-center" style={{ backgroundColor: 'var(--brand-50)', borderColor: 'var(--brand-500)' }}>
+            <div className="w-1.5 h-1.5 rounded-sm" style={{ backgroundColor: 'var(--brand-600)' }}></div>
+          </div>
+          <span className="text-[var(--text-secondary)] font-medium">Kolam Retensi BWS IV</span>
         </div>
+
         <div className="flex items-center gap-3">
-          <span className="w-4 h-4 rounded-full bg-rose-500/80 border-2 border-white animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
-          <span className="text-slate-300">AWLR Node / Titik Pantau</span>
+          <span className="w-4 h-4 rounded-full border-2 flex items-center justify-center" style={{ backgroundColor: 'var(--ews-awas-bg)', borderColor: 'var(--ews-awas)' }}>
+             <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--ews-awas)' }}></div>
+          </span>
+          <span className="text-[var(--text-secondary)] font-medium">Node AWLR / Titik Pantau</span>
         </div>
+
         <div className="flex items-center gap-3">
-          <span className="w-5 h-1 bg-cyan-400 rounded-full shadow-[0_0_5px_rgba(34,211,238,0.5)]" />
-          <span className="text-slate-300">Garis Sempadan DAS Wanggu</span>
+          <span className="w-5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--brand-500)' }} />
+          <span className="text-[var(--text-secondary)] font-medium">Garis Sempadan DAS</span>
         </div>
-        <div className="flex items-center gap-3 pt-1 border-t border-white/5">
-          <span className="w-4 h-4 rounded-full bg-blue-500/30 border border-blue-400/50" />
-          <span className="text-slate-400 text-[10px]">BMKG Presipitasi Radar</span>
+
+        <div className="flex items-center gap-3 pt-2 mt-1 border-t border-[var(--border-subtle)]">
+          <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: 'rgba(59, 130, 246, 0.5)' }} />
+          <span className="text-[var(--text-muted)] text-[10px] font-[family-name:var(--font-jetbrains)]">BMKG Presipitasi Radar</span>
         </div>
+
       </div>
 
       {/* ── CORE MAP CONTAINER ── */}
       <MapContainer 
         center={KENDARI_CENTER} 
         zoom={14} 
-        style={{ height: '100%', width: '100%' }}
-        zoomControl={true} // Aktifkan zoom control default Leaflet
+        style={{ height: '100%', width: '100%', borderRadius: 'inherit' }}
+        zoomControl={true}
       >
-        {/* Indikator Skala Geospasial Profesional (Wajib untuk Peta Engineering) */}
         <ScaleControl position="bottomright" imperial={false} metric={true} />
 
         <LayersControl position="topright">
           
-          {/* ── BASE LAYER 1: GOOGLE MAPS SATELLITE HYBRID (DEFAULT) ── */}
-          {/* Menggunakan API publik Google Maps lengkap dengan label jalan */}
           <LayersControl.BaseLayer checked name="Google Satellite (High-Res)">
             <TileLayer
               url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
-              attribution='&copy; <a href="https://www.google.com/maps">Google Maps</a>'
+              attribution='© <a href="https://www.google.com/maps">Google Maps</a>'
               maxZoom={20}
             />
           </LayersControl.BaseLayer>
 
-          {/* ── BASE LAYER 2: ESRI WORLD IMAGERY (GIS STANDARD) ── */}
-          {/* Sangat jernih untuk topografi, murni foto bumi tanpa label jalan */}
           <LayersControl.BaseLayer name="Esri World Imagery (Pure)">
             <TileLayer
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              attribution='&copy; <a href="https://www.esri.com/">Esri</a>, Earthstar Geographics'
+              attribution='© <a href="https://www.esri.com/">Esri</a>, Earthstar Geographics'
               maxZoom={19}
             />
           </LayersControl.BaseLayer>
 
-          {/* ── BASE LAYER 3: CARTO DARK (FALLBACK MODE MALAM) ── */}
-          <LayersControl.BaseLayer name="Dark Tactical Mode">
+          <LayersControl.BaseLayer name="Light Default Basemap">
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+              attribution='© <a href="https://carto.com/">CARTO</a>'
             />
           </LayersControl.BaseLayer>
 
-          {/* ── OVERLAY LAYER: JALUR SUNGAI (RIVER TRACE) ── */}
+          {/* ── OVERLAY LAYER: JALUR SUNGAI ── */}
           <LayersControl.Overlay checked name="Trase Poligon DAS Wanggu">
             <Polygon 
               positions={WANGGU_RIVER_TRACK}
               pathOptions={{
-                color: '#22d3ee', // cyan-400 agar sangat kontras di atas satelit hijau/gelap
+                color: '#3B82F6', // brand-500
                 weight: 4,
-                fillColor: '#0891b2', // cyan-600
+                fillColor: '#2563EB', // brand-600
                 fillOpacity: 0.15,
                 lineJoin: 'round',
-                dashArray: '8, 8' // Efek garis putus-putus
+                dashArray: '8, 8'
               }}
             />
           </LayersControl.Overlay>
@@ -166,25 +171,23 @@ export default function GISMap() {
           {/* ── OVERLAY LAYER: RADAR CUACA ── */}
           <LayersControl.Overlay checked name="Radar Cuaca BMKG (Live)">
             <FeatureGroup>
-              {/* Cincin luar radar */}
               <Circle 
                 center={KOLAM_RETENSI_BOULEVARD}
-                radius={2000} // 2 KM
+                radius={2000}
                 pathOptions={{
-                  color: '#3b82f6', 
-                  weight: 1,
+                  color: '#3B82F6',
+                  weight: 1.5,
                   fillColor: 'transparent',
-                  dashArray: '4, 10'
+                  dashArray: '4, 8'
                 }}
               />
-              {/* Inti sapuan radar dinamis */}
               <Circle 
                 center={KOLAM_RETENSI_BOULEVARD}
                 radius={2000}
                 pathOptions={{
                   color: 'transparent',
                   weight: 0,
-                  fillColor: '#2563eb', // blue-600
+                  fillColor: '#3B82F6',
                   fillOpacity: radarIntensity
                 }}
               />
@@ -195,27 +198,33 @@ export default function GISMap() {
 
         {/* ── INFRASTRUCTURE MARKER 1: KOLAM RETENSI ── */}
         <Marker position={KOLAM_RETENSI_BOULEVARD} icon={createInfrastructureIcon()}>
-          <Popup closeButton={false} className="tactical-popup">
-            <div className="p-2 font-mono text-xs space-y-2 min-w-[200px]">
-              <div className="flex items-center gap-2 border-b border-slate-700 pb-2 mb-2">
-                <Anchor size={14} className="text-blue-400" />
-                <span className="font-bold text-slate-100 tracking-wider">KOLAM RETENSI BWS</span>
+          <Popup closeButton={false} className="modern-popup">
+            <div className="p-1 space-y-3 min-w-[200px]">
+              <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-2">
+                <div className="icon-container brand w-6 h-6">
+                  <Anchor size={12} />
+                </div>
+                <span className="font-bold text-[var(--text-primary)] text-[11px] tracking-wide uppercase">Kolam Retensi BWS</span>
               </div>
-              <div className="space-y-1.5 text-[10px] text-slate-300">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Status Pintu Air</span>
-                  <span className="text-emerald-400 font-bold bg-emerald-400/10 px-1.5 py-0.5 rounded">TERBUKA (30%)</span>
+              
+              <div className="space-y-2 text-[10px] font-medium">
+                <div className="flex justify-between items-center">
+                  <span className="text-[var(--text-muted)]">Status Pintu Air</span>
+                  <span className="badge" style={{ backgroundColor: 'var(--ews-aman-bg)', color: 'var(--ews-aman)', border: '1px solid #BBF7D0' }}>
+                    TERBUKA (30%)
+                  </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Kapasitas Maks</span>
-                  <span className="text-slate-200">± 500.000 m³</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-[var(--text-muted)]">Kapasitas Maks</span>
+                  <span className="text-[var(--text-primary)] font-[family-name:var(--font-jetbrains)]">± 500.000 m³</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Sektor Operasi</span>
-                  <span className="text-cyan-400">Boulevard, Baruga</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-[var(--text-muted)]">Sektor Operasi</span>
+                  <span className="text-[var(--text-primary)]">Boulevard, Baruga</span>
                 </div>
               </div>
-              <div className="pt-2 mt-2 flex justify-between text-[9px] text-slate-500 border-t border-slate-700/50">
+              
+              <div className="pt-2 mt-2 flex justify-between text-[9px] font-[family-name:var(--font-jetbrains)] text-[var(--text-disabled)] border-t border-[var(--border-subtle)]">
                 <span className="flex items-center gap-1"><MapPin size={10}/> -4.033889</span>
                 <span>122.508056</span>
               </div>
@@ -224,29 +233,37 @@ export default function GISMap() {
         </Marker>
 
         {/* ── INFRASTRUCTURE MARKER 2: NODE AWLR ESP32 ── */}
-        <Marker position={JEMBATAN_WANGGU_AWLR} icon={createTacticalNodeIcon('AWAS', 32)}>
-          <Popup closeButton={false} className="tactical-popup">
-            <div className="p-2 font-mono text-xs space-y-2 min-w-[200px]">
-              <div className="flex items-center gap-2 border-b border-slate-700 pb-2 mb-2">
-                <Radio size={14} className="text-rose-400 animate-pulse" />
-                <span className="font-bold text-rose-400 tracking-wider">NODE AWLR WGG-01</span>
+        <Marker position={JEMBATAN_WANGGU_AWLR} icon={createTacticalNodeIcon('AWAS', 36)}>
+          <Popup closeButton={false} className="modern-popup">
+            <div className="p-1 space-y-3 min-w-[200px]">
+              <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-2">
+                <div className="icon-container w-6 h-6" style={{ backgroundColor: 'var(--ews-awas-bg)', color: 'var(--ews-awas)' }}>
+                  <Radio size={12} className="animate-pulse" />
+                </div>
+                <span className="font-bold text-[var(--text-primary)] text-[11px] tracking-wide uppercase">Node WGG-01</span>
               </div>
-              <div className="space-y-1.5 text-[10px] text-slate-300">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Lokasi Fisik</span>
-                  <span className="text-slate-200">Jembatan Wanggu</span>
+              
+              <div className="space-y-2 text-[10px] font-medium">
+                <div className="flex justify-between items-center">
+                  <span className="text-[var(--text-muted)]">Lokasi Fisik</span>
+                  <span className="text-[var(--text-primary)]">Jembatan Wanggu</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Uplink Telemetri</span>
-                  <span className="text-emerald-400 font-bold bg-emerald-400/10 px-1.5 py-0.5 rounded flex items-center gap-1"><Activity size={10}/> ONLINE</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-[var(--text-muted)]">Uplink Telemetri</span>
+                  <span className="badge" style={{ backgroundColor: 'var(--ews-aman-bg)', color: 'var(--ews-aman)', border: '1px solid #BBF7D0' }}>
+                    <Activity size={8} className="mr-1"/> ONLINE
+                  </span>
                 </div>
+                
                 <div className="pt-1">
-                  <div className="w-full bg-rose-500/20 border border-rose-500/50 text-rose-400 p-1.5 rounded flex items-center justify-center gap-1.5 font-bold animate-pulse">
+                  <div className="w-full flex items-center justify-center gap-1.5 font-bold p-1.5 rounded-md animate-pulse border" 
+                       style={{ backgroundColor: 'var(--ews-awas-bg)', color: 'var(--ews-awas)', borderColor: '#FECACA' }}>
                     <ShieldAlert size={12} /> TMA STATUS: AWAS
                   </div>
                 </div>
               </div>
-              <div className="pt-2 mt-2 flex justify-between text-[9px] text-slate-500 border-t border-slate-700/50">
+
+              <div className="pt-2 mt-2 flex justify-between text-[9px] font-[family-name:var(--font-jetbrains)] text-[var(--text-disabled)] border-t border-[var(--border-subtle)]">
                 <span className="flex items-center gap-1"><MapPin size={10}/> -4.017500</span>
                 <span>122.515200</span>
               </div>
@@ -256,34 +273,36 @@ export default function GISMap() {
 
       </MapContainer>
 
-      {/* ── INJEKSI CSS KHUSUS UNTUK POPUP LEAFLET AGAR SESUAI TEMA ── */}
+      {/* ── INJEKSI CSS MODERN UNTUK LEAFLET POPUP ── */}
       <style dangerouslySetInnerHTML={{__html: `
-        /* Overrides Leaflet Popup Default Styles for Tactical Look */
-        .tactical-popup .leaflet-popup-content-wrapper {
-          background: rgba(15, 23, 42, 0.95);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          backdrop-filter: blur(12px);
-          border-radius: 8px;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-          padding: 0;
+        .modern-popup .leaflet-popup-content-wrapper {
+          background: var(--surface-card);
+          border: 1px solid var(--border-subtle);
+          color: var(--text-primary);
+          border-radius: var(--radius-xl);
+          box-shadow: var(--shadow-lg);
+          padding: 4px;
         }
-        .tactical-popup .leaflet-popup-content {
-          margin: 0;
+        .modern-popup .leaflet-popup-content {
+          margin: 8px;
           line-height: 1.4;
         }
-        .tactical-popup .leaflet-popup-tip {
-          background: rgba(15, 23, 42, 0.95);
-          border: 1px solid rgba(255, 255, 255, 0.15);
+        .modern-popup .leaflet-popup-tip {
+          background: var(--surface-card);
+          border: 1px solid var(--border-subtle);
+          box-shadow: var(--shadow-sm);
         }
-        /* Make attribution less intrusive */
         .leaflet-control-attribution {
-          background: rgba(0,0,0,0.5) !important;
-          color: rgba(255,255,255,0.5) !important;
-          font-family: monospace;
+          background: var(--surface-overlay) !important;
+          color: var(--text-muted) !important;
+          font-family: var(--font-jetbrains), monospace;
           font-size: 9px !important;
+          backdrop-filter: blur(8px);
+          border-top-left-radius: var(--radius-sm);
         }
         .leaflet-control-attribution a {
-          color: rgba(255,255,255,0.8) !important;
+          color: var(--brand-600) !important;
+          text-decoration: none;
         }
       `}} />
     </div>

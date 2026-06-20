@@ -11,7 +11,7 @@
 import { useState } from 'react';
 import { 
   Settings, Save, Sliders, Radio, Globe, ShieldAlert, 
-  Database, RefreshCw, Lock, TerminalSquare, Info, ShieldCheck
+  Database, RefreshCw, Lock, TerminalSquare, ShieldCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -50,108 +50,93 @@ export default function GlobalSettingsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6 h-full font-[family-name:var(--font-inter)]">
       
       {/* ── BARIS 1: Header Dokumen ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-white/5 pb-5">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[var(--border-subtle)] pb-4 shrink-0">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono text-cyan-400 uppercase tracking-widest">
-            <Settings size={14} />
-            Centralized Core Configuration Panel
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-100 mt-1">
-            Pengaturan Global Sistem <span className="text-slate-500 font-light">| Command Center</span>
+          <h1 className="text-[20px] font-bold text-[var(--text-primary)] tracking-tight flex items-center gap-2">
+            <Settings className="text-[var(--brand-600)]" size={24} />
+            Pengaturan Global <span className="text-[var(--text-disabled)] font-normal ml-1">| System Config</span>
           </h1>
+          <p className="text-[12px] text-[var(--text-muted)] mt-1 font-medium uppercase tracking-widest">
+            Centralized Core Configuration Panel
+          </p>
         </div>
 
         {/* Tombol Simpan Global Form */}
         <button
           onClick={handleSaveConfiguration}
           disabled={isSaving}
-          className="px-4 py-2.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 rounded-xl text-xs font-bold font-mono transition-colors flex items-center gap-2 disabled:opacity-50 shadow-[0_0_15px_rgba(6,182,212,0.05)]"
+          className={cn(
+            "flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-bold text-[12px] tracking-wide transition-all shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-500)] focus:outline-none",
+            isSaving 
+              ? "bg-[var(--surface-inset)] text-[var(--text-disabled)] cursor-not-allowed border border-[var(--border-subtle)]" 
+              : "bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white active:scale-95"
+          )}
         >
           {isSaving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
-          {isSaving ? 'MENGUNCI PARAMETER...' : 'SIMPAN CONFIG UTAMA'}
+          {isSaving ? 'MENGUNCI PARAMETER...' : 'SIMPAN KONFIGURASI'}
         </button>
       </div>
 
       {/* ── BARIS 2: Layout Belah Dua (Navigasi Kiri vs Form Kanan) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
         
-        {/* PANEL KIRIM: Navigasi Kategori Pengaturan (3 Kolom) */}
-        <div className="lg:col-span-3 flex flex-col space-y-1 bg-slate-900/40 border border-white/5 p-2 rounded-xl backdrop-blur-md">
-          <button
-            onClick={() => setActiveSection('MQTT')}
-            className={cn(
-              "w-full px-3 py-2.5 rounded-lg text-xs font-mono font-medium uppercase tracking-wider text-left flex items-center gap-2.5 transition-colors",
-              activeSection === 'MQTT' ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/10" : "text-slate-400 hover:bg-white/[0.02] hover:text-slate-200"
-            )}
-          >
-            <Radio size={14} /> Pipeline & Broker MQTT
-          </button>
-          <button
-            onClick={() => setActiveSection('STATION')}
-            className={cn(
-              "w-full px-3 py-2.5 rounded-lg text-xs font-mono font-medium uppercase tracking-wider text-left flex items-center gap-2.5 transition-colors",
-              activeSection === 'STATION' ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/10" : "text-slate-400 hover:bg-white/[0.02] hover:text-slate-200"
-            )}
-          >
-            <Globe size={14} /> Anchor & Metadata Stasiun
-          </button>
-          <button
-            onClick={() => setActiveSection('THRES')}
-            className={cn(
-              "w-full px-3 py-2.5 rounded-lg text-xs font-mono font-medium uppercase tracking-wider text-left flex items-center gap-2.5 transition-colors",
-              activeSection === 'THRES' ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/10" : "text-slate-400 hover:bg-white/[0.02] hover:text-slate-200"
-            )}
-          >
-            <ShieldAlert size={14} /> Ambang Batas EWS (PUPR)
-          </button>
-          <button
-            onClick={() => setActiveSection('SYS')}
-            className={cn(
-              "w-full px-3 py-2.5 rounded-lg text-xs font-mono font-medium uppercase tracking-wider text-left flex items-center gap-2.5 transition-colors",
-              activeSection === 'SYS' ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/10" : "text-slate-400 hover:bg-white/[0.02] hover:text-slate-200"
-            )}
-          >
-            <Database size={14} /> Utilitas & Sinkronisasi Waktu
-          </button>
+        {/* PANEL KIRIM: Navigasi Kategori Pengaturan */}
+        <div className="lg:col-span-3 card p-2 flex flex-col gap-1 shrink-0">
+          <SettingsNavButton 
+            active={activeSection === 'MQTT'} 
+            onClick={() => setActiveSection('MQTT')} 
+            icon={Radio} 
+            label="Pipeline & Broker MQTT" 
+          />
+          <SettingsNavButton 
+            active={activeSection === 'STATION'} 
+            onClick={() => setActiveSection('STATION')} 
+            icon={Globe} 
+            label="Metadata Stasiun" 
+          />
+          <SettingsNavButton 
+            active={activeSection === 'THRES'} 
+            onClick={() => setActiveSection('THRES')} 
+            icon={ShieldAlert} 
+            label="Ambang Batas EWS" 
+          />
+          <SettingsNavButton 
+            active={activeSection === 'SYS'} 
+            onClick={() => setActiveSection('SYS')} 
+            icon={Database} 
+            label="Utilitas & Waktu" 
+          />
         </div>
 
-        {/* PANEL KANAN: Form Pengisian Dinamis (9 Kolom) */}
-        <div className="lg:col-span-9 bg-slate-900/40 border border-white/5 p-5 rounded-xl backdrop-blur-md min-h-[320px] flex flex-col justify-between">
+        {/* PANEL KANAN: Form Pengisian Dinamis */}
+        <div className="lg:col-span-9 card flex flex-col h-full overflow-hidden">
           
-          <div className="space-y-5">
+          <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
             
             {/* KATEGORI 1: Pipeline & Broker MQTT */}
             {activeSection === 'MQTT' && (
-              <div className="space-y-4">
-                <div className="border-b border-white/5 pb-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-300">Pipa Jalur Data Jaringan</h2>
-                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">Kredensial Koneksi Gateway EMQX Publik/Privat</p>
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="border-b border-[var(--border-subtle)] pb-3">
+                  <h2 className="text-[16px] font-bold text-[var(--text-primary)]">Pipa Jalur Data Jaringan</h2>
+                  <p className="text-[12px] text-[var(--text-secondary)] mt-1">Kredensial Koneksi Gateway EMQX Publik/Privat untuk akuisisi telemetri.</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-                  <div className="space-y-1.5">
-                    <span className="text-slate-500 uppercase text-[9px] block">Broker URL Host (WebSockets)</span>
-                    <input type="text" value={mqttHost} onChange={(e) => setMqttHost(e.target.value)} className="w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-cyan-500 font-bold" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <SettingsInput label="Broker URL Host (WebSockets)" value={mqttHost} onChange={setMqttHost} type="text" />
+                  <SettingsInput label="WSS Secure Port" value={mqttPort} onChange={(v) => setMqttPort(Number(v))} type="number" />
+                  <div className="md:col-span-2">
+                    <SettingsInput label="Master Ingress Telemetry Topic" value={mqttTopic} onChange={setMqttTopic} type="text" isHighlight />
                   </div>
-                  <div className="space-y-1.5">
-                    <span className="text-slate-500 uppercase text-[9px] block">WSS secure Port</span>
-                    <input type="number" value={mqttPort} onChange={(e) => setMqttPort(parseInt(e.target.value) || 8084)} className="w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-cyan-500 font-bold" />
-                  </div>
-                  <div className="space-y-1.5 md:col-span-2">
-                    <span className="text-slate-500 uppercase text-[9px] block">Master Ingress Telemetry Topic</span>
-                    <input type="text" value={mqttTopic} onChange={(e) => setMqttTopic(e.target.value)} className="w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-2 text-cyan-400 focus:outline-none focus:border-cyan-500 font-bold animate-pulse" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-slate-500 uppercase text-[9px] block">Gateway Client Username</span>
-                    <input type="text" value={mqttUser} onChange={(e) => setMqttUser(e.target.value)} className="w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-2 text-slate-400 focus:outline-none focus:border-cyan-500" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-slate-500 uppercase text-[9px] block">Gateway Client Password</span>
+                  <SettingsInput label="Gateway Client Username" value={mqttUser} onChange={setMqttUser} type="text" />
+                  
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Gateway Client Password</label>
                     <div className="relative">
-                      <input type="password" value="••••••••••••" disabled className="w-full bg-slate-950/40 border border-white/5 rounded-lg px-3 py-2 text-slate-600 focus:outline-none cursor-not-allowed select-none" />
-                      <Lock size={12} className="absolute right-3 top-3 text-slate-600" />
+                      <input type="password" value="••••••••••••" disabled className="w-full bg-[var(--surface-inset)] border border-[var(--border-subtle)] rounded-lg px-4 py-2.5 text-[13px] text-[var(--text-disabled)] font-[family-name:var(--font-jetbrains)] focus:outline-none cursor-not-allowed select-none" />
+                      <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-disabled)]" />
                     </div>
                   </div>
                 </div>
@@ -160,51 +145,46 @@ export default function GlobalSettingsPage() {
 
             {/* KATEGORI 2: Anchor & Metadata Stasiun */}
             {activeSection === 'STATION' && (
-              <div className="space-y-4">
-                <div className="border-b border-white/5 pb-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-300">Metadata Registrasi Geografis</h2>
-                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">Identitas Absolut Penempatan Fisik Stasiun Lapangan</p>
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="border-b border-[var(--border-subtle)] pb-3">
+                  <h2 className="text-[16px] font-bold text-[var(--text-primary)]">Metadata Registrasi Geografis</h2>
+                  <p className="text-[12px] text-[var(--text-secondary)] mt-1">Identitas Absolut Penempatan Fisik Stasiun Lapangan pada GIS Matrix.</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-                  <div className="space-y-1.5">
-                    <span className="text-slate-500 uppercase text-[9px] block">Nama Resmi Stasiun Pantau</span>
-                    <input type="text" value={stationName} onChange={(e) => setStationName(e.target.value)} className="w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-cyan-500 font-bold" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="md:col-span-2">
+                    <SettingsInput label="Nama Resmi Stasiun Pantau" value={stationName} onChange={setStationName} type="text" />
                   </div>
-                  <div className="space-y-1.5">
-                    <span className="text-slate-500 uppercase text-[9px] block">Kode Aset Registrasi BMN</span>
-                    <input type="text" value={assetCode} onChange={(e) => setAssetCode(e.target.value)} className="w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-cyan-500" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-slate-500 uppercase text-[9px] block">Jangkar Lintang (Latitude desimal)</span>
-                    <input type="number" step="0.000001" value={latitude} onChange={(e) => setLatitude(parseFloat(e.target.value) || 0)} className="w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-2 text-cyan-400 focus:outline-none focus:border-cyan-500 font-bold" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-slate-500 uppercase text-[9px] block">Jangkar Bujur (Longitude desimal)</span>
-                    <input type="number" step="0.000001" value={longitude} onChange={(e) => setLongitude(parseFloat(e.target.value) || 0)} className="w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-2 text-cyan-400 focus:outline-none focus:border-cyan-500 font-bold" />
-                  </div>
+                  <SettingsInput label="Kode Aset Registrasi BMN" value={assetCode} onChange={setAssetCode} type="text" />
+                  <div className="hidden md:block"></div> {/* Spacer */}
+                  <SettingsInput label="Jangkar Lintang (Latitude)" value={latitude} onChange={(v) => setLatitude(Number(v))} type="number" step="0.000001" />
+                  <SettingsInput label="Jangkar Bujur (Longitude)" value={longitude} onChange={(v) => setLongitude(Number(v))} type="number" step="0.000001" />
                 </div>
               </div>
             )}
 
             {/* KATEGORI 3: Ambang Batas EWS (PUPR) */}
             {activeSection === 'THRES' && (
-              <div className="space-y-4">
-                <div className="border-b border-white/5 pb-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-300">Ambang Batas Kedaruratan Vertikal</h2>
-                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">Konfigurasi Aturan Sempadan Banjir Standar Ditjen SDA</p>
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="border-b border-[var(--border-subtle)] pb-3">
+                  <h2 className="text-[16px] font-bold text-[var(--text-primary)] flex items-center gap-2">Ambang Batas Kedaruratan Vertikal</h2>
+                  <p className="text-[12px] text-[var(--text-secondary)] mt-1">Konfigurasi Aturan Sempadan Banjir Standar Ditjen SDA PUPR.</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-                  <div className="space-y-1.5 p-3 rounded-lg bg-rose-500/5 border border-rose-500/10">
-                    <span className="text-rose-400 uppercase text-[9px] font-bold block">Siaga I — AWAS (Meter)</span>
-                    <input type="number" step="0.01" value={siaga1} onChange={(e) => setSiaga1(parseFloat(e.target.value) || 0)} className="w-full bg-slate-950/60 border border-rose-500/20 rounded-lg px-3 py-2 text-rose-400 font-bold focus:outline-none focus:border-rose-500" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="flex flex-col gap-1.5 p-4 rounded-xl border bg-[var(--ews-awas-bg)] border-[#FECACA]">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--ews-awas)]">Siaga I — AWAS (Meter)</label>
+                    <input type="number" step="0.01" value={siaga1} onChange={(e) => setSiaga1(parseFloat(e.target.value) || 0)} className="w-full bg-[var(--surface-card)] border border-[#FCA5A5] rounded-lg px-4 py-2.5 text-[14px] font-bold text-[var(--ews-awas)] font-[family-name:var(--font-jetbrains)] focus:outline-none focus:ring-2 focus:ring-[var(--ews-awas)]" />
                   </div>
-                  <div className="space-y-1.5 p-3 rounded-lg bg-orange-500/5 border border-orange-500/10">
-                    <span className="text-orange-400 uppercase text-[9px] font-bold block">Siaga II — SIAGA (Meter)</span>
-                    <input type="number" step="0.01" value={siaga2} onChange={(e) => setSiaga2(parseFloat(e.target.value) || 0)} className="w-full bg-slate-950/60 border border-orange-500/20 rounded-lg px-3 py-2 text-orange-400 font-bold focus:outline-none focus:border-orange-500" />
+                  
+                  <div className="flex flex-col gap-1.5 p-4 rounded-xl border bg-[var(--ews-siaga-bg)] border-[#FDBA74]">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--ews-siaga)]">Siaga II — SIAGA (Meter)</label>
+                    <input type="number" step="0.01" value={siaga2} onChange={(e) => setSiaga2(parseFloat(e.target.value) || 0)} className="w-full bg-[var(--surface-card)] border border-[#FCD34D] rounded-lg px-4 py-2.5 text-[14px] font-bold text-[var(--ews-siaga)] font-[family-name:var(--font-jetbrains)] focus:outline-none focus:ring-2 focus:ring-[var(--ews-siaga)]" />
                   </div>
-                  <div className="space-y-1.5 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
-                    <span className="text-amber-400 uppercase text-[9px] font-bold block">Siaga III — WASPADA (Meter)</span>
-                    <input type="number" step="0.01" value={siaga3} onChange={(e) => setSiaga3(parseFloat(e.target.value) || 0)} className="w-full bg-slate-950/60 border border-amber-500/20 rounded-lg px-3 py-2 text-amber-400 font-bold focus:outline-none focus:border-amber-500" />
+
+                  <div className="flex flex-col gap-1.5 p-4 rounded-xl border bg-[var(--ews-waspada-bg)] border-[#FDE68A]">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--ews-waspada)]">Siaga III — WASPADA (Meter)</label>
+                    <input type="number" step="0.01" value={siaga3} onChange={(e) => setSiaga3(parseFloat(e.target.value) || 0)} className="w-full bg-[var(--surface-card)] border border-[#FDE047] rounded-lg px-4 py-2.5 text-[14px] font-bold text-[var(--ews-waspada)] font-[family-name:var(--font-jetbrains)] focus:outline-none focus:ring-2 focus:ring-[var(--ews-waspada)]" />
                   </div>
                 </div>
               </div>
@@ -212,20 +192,15 @@ export default function GlobalSettingsPage() {
 
             {/* KATEGORI 4: Utilitas & Sinkronisasi Waktu */}
             {activeSection === 'SYS' && (
-              <div className="space-y-4">
-                <div className="border-b border-white/5 pb-2">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-300">Utilitas Sinkronisasi Waktu & Jadwal</h2>
-                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">Penetapan Parameter Pewaktuan Global Perangkat Keras</p>
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="border-b border-[var(--border-subtle)] pb-3">
+                  <h2 className="text-[16px] font-bold text-[var(--text-primary)]">Utilitas Sinkronisasi Waktu & Jadwal</h2>
+                  <p className="text-[12px] text-[var(--text-secondary)] mt-1">Penetapan Parameter Pewaktuan Global Perangkat Keras MCU.</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-                  <div className="space-y-1.5">
-                    <span className="text-slate-500 uppercase text-[9px] block">Rujukan Server NTP (Internet Time)</span>
-                    <input type="text" value={ntpServer} onChange={(e) => setNtpServer(e.target.value)} className="w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-cyan-500" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <span className="text-slate-500 uppercase text-[9px] block">Interval Sampling Hardware (Duty Cycle ms)</span>
-                    <input type="number" value={txInterval} onChange={(e) => setTxInterval(parseInt(e.target.value) || 4000)} className="w-full bg-slate-950/60 border border-white/10 rounded-lg px-3 py-2 text-slate-300 focus:outline-none focus:border-cyan-500 font-bold" />
-                  </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <SettingsInput label="Rujukan Server NTP (Internet Time)" value={ntpServer} onChange={setNtpServer} type="text" />
+                  <SettingsInput label="Interval Sampling Hardware (Duty Cycle ms)" value={txInterval} onChange={(v) => setTxInterval(Number(v))} type="number" />
                 </div>
               </div>
             )}
@@ -233,10 +208,11 @@ export default function GlobalSettingsPage() {
           </div>
 
           {/* Banner Status Penguncian File Konfigurasi */}
-          <div className="p-3 mt-6 rounded-lg bg-cyan-500/5 border border-cyan-500/15 text-[11px] text-slate-400 flex items-center gap-2.5 font-sans">
-            <ShieldCheck size={14} className="text-cyan-400 shrink-0" />
-            <p>
-              Mengubah parameter di halaman ini akan menulis ulang variabel konseptual global. Nilai ambang batas dan koordinat baru akan didistribusikan secara instan ke seluruh rute modul *Command Center* pasca komit disimpan.
+          <div className="bg-[var(--brand-50)] border-t border-[var(--brand-100)] p-4 flex items-start gap-3 shrink-0">
+            <ShieldCheck size={18} className="text-[var(--brand-600)] shrink-0 mt-0.5" />
+            <p className="text-[11px] text-[var(--brand-700)] leading-relaxed font-medium">
+              <strong className="block mb-0.5 text-[12px]">Konfigurasi Berbasis Sesi</strong>
+              Mengubah parameter di halaman ini akan menulis ulang variabel konseptual global. Nilai ambang batas dan koordinat baru akan didistribusikan secara instan ke seluruh rute modul <em>Command Center</em> pasca disimpan.
             </p>
           </div>
 
@@ -244,18 +220,56 @@ export default function GlobalSettingsPage() {
       </div>
 
       {/* ── BARIS 3: Doktrin Hukum Keamanan Siber BWS IV ── */}
-      <div className="p-4 rounded-xl bg-slate-900/20 border border-white/5 flex items-start gap-3 backdrop-blur-md">
-        <div className="p-2 rounded-lg bg-cyan-500/5 text-cyan-400 border border-cyan-500/10">
-          <TerminalSquare size={16} />
+      <div className="card p-5 bg-[var(--surface-inset)] flex items-start gap-4 shrink-0">
+        <div className="w-10 h-10 rounded-lg bg-[var(--surface-card)] border border-[var(--border-subtle)] flex items-center justify-center shrink-0 shadow-sm">
+          <TerminalSquare size={20} className="text-[var(--text-muted)]" />
         </div>
-        <div className="text-xs space-y-1">
-          <span className="font-bold text-slate-300 uppercase tracking-wide block">Doktrin Perlindungan Enkripsi & Integritas Gateway — Protokol Keamanan</span>
-          <p className="text-slate-400 leading-relaxed font-sans">
-            Seluruh berkas kredensial broker MQTT dan hak akses pipa parameter dilindungi menggunakan standar enkripsi lapisan transport TLS/SSL aman pada gerbang port 8084 WSS. Sesuai dengan protokol tata kelola data intelijen kebencanaan Balai Wilayah Sungai Sulawesi IV, pembukaan kunci enkripsi atau modifikasi sebaran koordinat absolut tanpa surat otorisasi dari penanggung jawab teknis dilarang keras guna mencegah manipulasi isyarat peringatan dini (*false injection flood alarms*) oleh pihak luar.
+        <div className="space-y-1.5">
+          <span className="font-bold text-[var(--text-primary)] text-[12px] uppercase tracking-wide block">Doktrin Perlindungan Enkripsi & Integritas Gateway</span>
+          <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed text-justify">
+            Seluruh berkas kredensial broker MQTT dan hak akses pipa parameter dilindungi menggunakan standar enkripsi lapisan transport TLS/SSL aman pada gerbang port 8084 WSS. Sesuai dengan protokol tata kelola data intelijen kebencanaan Balai Wilayah Sungai Sulawesi IV, pembukaan kunci enkripsi atau modifikasi sebaran koordinat absolut tanpa surat otorisasi dari penanggung jawab teknis dilarang keras guna mencegah manipulasi isyarat peringatan dini (<em>false injection flood alarms</em>) oleh pihak luar.
           </p>
         </div>
       </div>
 
+    </div>
+  );
+}
+
+// ── KOMPONEN PENDUKUNG (Micro-components) ──
+
+function SettingsNavButton({ active, onClick, icon: Icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full px-4 py-3 rounded-lg text-[11px] font-bold uppercase tracking-widest text-left flex items-center gap-3 transition-all",
+        active 
+          ? "bg-[var(--brand-50)] text-[var(--brand-700)] border border-[var(--brand-200)] shadow-sm" 
+          : "text-[var(--text-secondary)] hover:bg-[var(--surface-inset)] hover:text-[var(--text-primary)] border border-transparent"
+      )}
+    >
+      <Icon size={16} /> {label}
+    </button>
+  );
+}
+
+function SettingsInput({ label, value, onChange, type, step, isHighlight }: { label: string, value: string | number, onChange: (v: string) => void, type: string, step?: string, isHighlight?: boolean }) {
+  return (
+    <div className="flex flex-col gap-1.5 relative">
+      <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] ml-1">
+        {label}
+      </label>
+      <input 
+        type={type} 
+        step={step}
+        value={value} 
+        onChange={(e) => onChange(e.target.value)} 
+        className={cn(
+          "w-full bg-[var(--surface-bg)] border border-[var(--border-default)] rounded-lg px-4 py-2.5 text-[13px] font-[family-name:var(--font-jetbrains)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] transition-all hover:border-[var(--border-strong)]",
+          isHighlight && "font-bold text-[var(--brand-600)] border-[var(--brand-200)] bg-[var(--brand-50)]"
+        )} 
+      />
     </div>
   );
 }

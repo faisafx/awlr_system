@@ -1,42 +1,24 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// File: app/layout.tsx
-// ─────────────────────────────────────────────────────────────────────────────
-
 import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
 import { Sidebar } from '@/components/sidebar';
 import { PageTransitionWrapper } from '@/components/PageTransitionWrapper';
-import { ThemeProvider } from '@/components/theme-provider'; // <--- MESIN TEMA DITAMBAHKAN
+import { ThemeProvider } from '@/components/theme-provider';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
-// ── 1. Type Definitions & Config ──────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 
-interface SystemConfig {
-  appName: string;
-  stationNode: string;
-  agency: string;
-  location: {
-    city: string;
-    province: string;
-    coordinates: string;
-  };
-  version: string;
-}
+const SYSTEM_CONFIG = {
+  appName:     'TERAWANG',
+  stationNode: 'Pos WGG-01 · Sungai Wanggu',
+  agency:      'BBWS Sulawesi IV',
+  version:     'v2.1.0',
+  coordinates: '4°01′S 122°31′E',
+  status:      'ONLINE',
+} as const;
 
-const SYSTEM_CONFIG: SystemConfig = {
-  appName: 'AWLR Command Center',
-  stationNode: 'Node 01 - Sungai Wanggu',
-  agency: 'BBWS Sulawesi IV',
-  location: {
-    city: 'Kendari',
-    province: 'Sulawesi Tenggara',
-    coordinates: '-4.015, 122.518',
-  },
-  version: 'v2.1.0-stable',
-};
-
-// ── 2. Typography ─────────────────────────────────────────────────────────────
+// ── Typography ────────────────────────────────────────────────────────────────
 
 const inter = Inter({
   subsets: ['latin'],
@@ -50,115 +32,148 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-// ── 3. Metadata & Viewport ────────────────────────────────────────────────────
+// ── Metadata ──────────────────────────────────────────────────────────────────
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
-  colorScheme: 'light dark', // Mendukung dua mode
+  colorScheme: 'dark', // Diatur ke dark mode
 };
 
 export const metadata: Metadata = {
   title: {
-    default: `${SYSTEM_CONFIG.appName} | ${SYSTEM_CONFIG.stationNode}`,
+    default:  `${SYSTEM_CONFIG.appName} | ${SYSTEM_CONFIG.stationNode}`,
     template: `%s | ${SYSTEM_CONFIG.appName}`,
   },
-  description: `Sistem Pemantauan Hidrologi Sungai Wanggu, ${SYSTEM_CONFIG.location.city}.`,
-  applicationName: SYSTEM_CONFIG.appName,
+  description: 'Sistem pemantauan hidrologi real-time Sungai Wanggu, Kendari — BWS Sulawesi IV.',
   robots: { index: false, follow: false },
 };
 
-// ── 4. Internal UI Components ─────────────────────────────────────────────────
+// ── Top Bar ───────────────────────────────────────────────────────────────────
 
-const SkipToMainContent = () => (
-  <a
-    href="#main-content"
-    className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-cyan-600 focus:text-white focus:font-mono focus:text-sm focus:rounded-sm focus:outline-none focus:ring-2 focus:ring-cyan-400 transition-all"
-  >
-    [ ACCESS MAIN TERMINAL ]
-  </a>
-);
+function TopBar() {
+  return (
+    <header className="h-[72px] bg-[var(--surface-card)] border-b border-[var(--border-subtle)] flex items-center justify-between px-6 lg:px-8 relative z-30 shrink-0 shadow-sm">
+      
+      {/* Left: Brand mark + station identity */}
+      <div className="flex items-center gap-4 pl-12 md:pl-0">
+        {/* Logo mark - Enlarged & stylized */}
+        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[var(--brand-50)] border border-[var(--brand-100)] shadow-inner">
+          <svg width="24" height="24" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path
+              d="M11 2C11 2 4 9.5 4 13.5C4 17.09 7.13 20 11 20C14.87 20 18 17.09 18 13.5C18 9.5 11 2 11 2Z"
+              fill="var(--brand-600)"
+            />
+            <circle cx="11" cy="14" r="3" fill="white" fillOpacity="0.5" />
+          </svg>
+        </div>
 
-const AmbientBackground = () => (
-  <div className="fixed inset-0 z-0 pointer-events-none bg-sand-primary dark:bg-bg-primary overflow-hidden transition-colors duration-500">
-    {/* Soft Holographic Glows (Menyesuaikan tema) */}
-    <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-sand-accent/10 dark:bg-cyan-900/10 blur-[80px]" />
-    <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-sand-accent/10 dark:bg-teal-900/10 blur-[80px]" />
-    
-    <div 
-      className="absolute inset-0 opacity-[0.04] dark:opacity-[0.04] opacity-[0.08]" 
-      style={{
-        backgroundImage: 'linear-gradient(transparent 50%, rgba(0,0,0,1) 50%)',
-        backgroundSize: '100% 4px',
-      }}
-    />
-  </div>
-);
+        <div className="flex flex-col justify-center">
+          <span className="text-xl md:text-2xl font-black text-[var(--text-primary)] tracking-tight leading-none mb-1">
+            {SYSTEM_CONFIG.appName}
+          </span>
+          <span className="text-xs text-[var(--text-muted)] font-[family-name:var(--font-jetbrains)] tracking-[0.04em] leading-none uppercase">
+            {SYSTEM_CONFIG.stationNode}
+          </span>
+        </div>
+      </div>
 
-const AgencyHeaderStrip = () => (
-  <header className="relative z-20 flex w-full h-10 items-center justify-between px-6 bg-sand-card/50 dark:bg-bg-surface/50 border-b border-sand-border dark:border-cyan-900/30 text-[10px] uppercase tracking-[0.2em] text-sand-muted dark:text-slate-400 font-mono transition-colors duration-500">
-    <div className="flex items-center gap-4">
-      <span className="flex items-center gap-2 text-sand-accent dark:text-cyan-400">
-        <span className="w-1.5 h-1.5 rounded-full bg-sand-accent dark:bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)] animate-pulse" />
-        {SYSTEM_CONFIG.agency}
-      </span>
-      <span className="hidden sm:inline-block text-sand-muted/50 dark:text-slate-600">///</span>
-      <span className="hidden sm:inline-block">
-        {SYSTEM_CONFIG.location.coordinates}
-      </span>
-    </div>
-    <div className="flex items-center gap-4">
-      <span className="text-status-aman">STATUS: SECURE</span>
-      <span className="text-sand-muted/50 dark:text-slate-600">///</span>
-      <span>{SYSTEM_CONFIG.version}</span>
-    </div>
-  </header>
-);
+      {/* Center: Divider line (Hidden on small screens) */}
+      <div
+        className="flex-1 max-w-[300px] h-px bg-gradient-to-r from-transparent via-[var(--border-strong)] to-transparent mx-8 hidden lg:block opacity-30"
+        aria-hidden="true"
+      />
 
-// ── 5. Main Root Layout ───────────────────────────────────────────────────────
+      {/* Right: System status pills */}
+      <div className="flex items-center gap-5">
+
+        <ThemeSwitcher />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--surface-inset)] border border-[var(--border-subtle)]">
+          <span className="status-dot live" aria-label="sistem aktif" />
+          <span className="text-[11px] font-bold text-[var(--ews-aman)] font-[family-name:var(--font-jetbrains)] tracking-widest uppercase">
+            {SYSTEM_CONFIG.status}
+          </span>
+        </div>
+
+        {/* Separator */}
+        <div className="w-[1px] h-6 bg-[var(--border-subtle)] hidden md:block" aria-hidden="true" />
+
+        {/* Agency + coordinates */}
+        <div className="hidden md:flex flex-col items-end justify-center">
+          <span className="text-[11px] font-bold text-[var(--text-secondary)] font-[family-name:var(--font-jetbrains)] tracking-widest uppercase">
+            {SYSTEM_CONFIG.agency}
+          </span>
+          <span className="text-[10px] text-[var(--text-disabled)] font-[family-name:var(--font-jetbrains)] tracking-widest uppercase">
+            {SYSTEM_CONFIG.coordinates}
+          </span>
+        </div>
+
+        {/* Version badge */}
+        <span className="badge neutral text-[10px] font-[family-name:var(--font-jetbrains)] hidden lg:inline-flex ml-2 border border-[var(--border-subtle)]">
+          {SYSTEM_CONFIG.version}
+        </span>
+      </div>
+    </header>
+  );
+}
+
+// ── Skip link ─────────────────────────────────────────────────────────────────
+
+function SkipLink() {
+  return (
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[100] focus:px-3 focus:py-1.5 focus:text-xs focus:font-medium focus:rounded-lg focus:bg-white focus:text-blue-700 focus:border focus:border-blue-200 focus:shadow-md focus:outline-none"
+    >
+      Lewati ke konten utama
+    </a>
+  );
+}
+
+// ── Root Layout ───────────────────────────────────────────────────────────────
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
-      {/* Body sekarang menggunakan variabel dinamis dari tailwind.config.ts */}
-      <body className="relative bg-sand-primary text-sand-text dark:bg-bg-primary dark:text-slate-200 font-sans antialiased overflow-hidden selection:bg-sand-accent/30 dark:selection:bg-cyan-900/50 flex flex-col h-screen w-screen transition-colors duration-500">
-        
-        {/* PEMBUNGKUS TEMA WAJIB ADA DI SINI */}
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <html
+      lang="id"
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+    >
+      <body
+        className="bg-[var(--surface-bg)] text-[var(--text-primary)] flex flex-col h-[100dvh] w-screen overflow-hidden font-[family-name:var(--font-inter)] antialiased"
+      >
+        <ThemeProvider attribute="class" defaultTheme="dark" themes={['light', 'dark', 'pastel', 'colorblind']}>
+          <SkipLink />
+
+          {/* ── Top bar: fixed height, full width ── */}
+        <TopBar />
+
+        {/* ── Body: sidebar + main ── */}
+        <div className="flex flex-1 overflow-hidden bg-[var(--surface-bg)]">
           
-          <SkipToMainContent />
-          <AmbientBackground />
-          <AgencyHeaderStrip />
+          {/* Sidebar */}
+          <Sidebar />
 
-          {/* Flexible Working Area */}
-          <div className="relative z-10 flex flex-1 w-full overflow-hidden p-3 gap-3">
-            
-            <Sidebar />
-
-            <main 
-              id="main-content"
-              className="flex-1 flex flex-col min-w-0 bg-sand-card/90 dark:bg-bg-card/80 backdrop-blur-xl
-                         border border-sand-border dark:border-cyan-900/30 rounded-lg shadow-2xl relative
-                         transition-colors duration-500 ease-in-out group"
-            >
-              {/* Tactical Corner Brackets */}
-              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-sand-accent/50 dark:border-cyan-500/50 rounded-tl-lg pointer-events-none" />
-              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-sand-accent/50 dark:border-cyan-500/50 rounded-tr-lg pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-sand-accent/50 dark:border-cyan-500/50 rounded-bl-lg pointer-events-none" />
-              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-sand-accent/50 dark:border-cyan-500/50 rounded-br-lg pointer-events-none" />
-
-              {/* Inner Content Area */}
-              <div className="relative z-10 flex-1 overflow-x-hidden overflow-y-auto scroll-smooth custom-scrollbar p-6">
+          {/* Main content area */}
+          <main
+            id="main-content"
+            className="flex-1 min-w-0 flex flex-col overflow-hidden bg-[var(--surface-bg)] shadow-[inset_1px_0_0_var(--border-subtle)]"
+          >
+            {/* Scrollable content shell */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth scrollbar-hide">
+              
+              {/* Inner padding */}
+              <div className="max-w-[1440px] mx-auto px-5 md:px-7 py-6 pb-12">
                 <PageTransitionWrapper>
                   {children}
                 </PageTransitionWrapper>
               </div>
-            </main>
 
-          </div>
+            </div>
+          </main>
+        </div>
         </ThemeProvider>
-
       </body>
     </html>
   );
