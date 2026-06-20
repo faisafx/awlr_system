@@ -60,7 +60,7 @@ export const metadata: Metadata = {
 
 function TopBar() {
   return (
-    <header className="h-[72px] bg-[var(--surface-card)] border-b border-[var(--border-subtle)] flex items-center justify-between px-6 lg:px-8 relative z-30 shrink-0 shadow-sm">
+    <header className="h-[72px] bg-[var(--surface-card)] border-b border-[var(--border-subtle)] flex items-center justify-between px-3 md:px-6 lg:px-8 relative z-30 shrink-0 shadow-sm">
 
       {/* Left: Brand mark + station identity */}
       <div className="flex items-center gap-4 pl-12 md:pl-0">
@@ -75,11 +75,11 @@ function TopBar() {
           </svg>
         </div>
 
-        <div className="flex flex-col justify-center">
-          <span className="text-xl md:text-2xl font-black text-[var(--text-primary)] tracking-tight leading-none mb-1">
+        <div className="flex flex-col justify-center overflow-hidden">
+          <span className="text-lg md:text-2xl font-black text-[var(--text-primary)] tracking-tight leading-none mb-1 truncate">
             {SYSTEM_CONFIG.appName}
           </span>
-          <span className="text-xs text-[var(--text-muted)] font-[family-name:var(--font-jetbrains)] tracking-[0.04em] leading-none uppercase">
+          <span className="text-[9px] md:text-xs text-[var(--text-muted)] font-[family-name:var(--font-jetbrains)] tracking-[0.04em] leading-none uppercase truncate">
             {SYSTEM_CONFIG.stationNode}
           </span>
         </div>
@@ -102,12 +102,12 @@ function TopBar() {
       </div>
 
       {/* Right: System status pills */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-2 md:gap-5">
 
         <ThemeSwitcher />
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--surface-inset)] border border-[var(--border-subtle)]">
+        <div className="flex items-center gap-1.5 md:gap-2 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full bg-[var(--surface-inset)] border border-[var(--border-subtle)]">
           <span className="status-dot live" aria-label="sistem aktif" />
-          <span className="text-[11px] font-bold text-[var(--ews-aman)] font-[family-name:var(--font-jetbrains)] tracking-widest uppercase">
+          <span className="text-[9px] md:text-[11px] font-bold text-[var(--ews-aman)] font-[family-name:var(--font-jetbrains)] tracking-widest uppercase">
             {SYSTEM_CONFIG.status}
           </span>
         </div>

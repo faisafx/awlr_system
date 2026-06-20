@@ -384,22 +384,12 @@ Jawab dengan asik, informatif, dan langsung ke intinya!`;
       {/* Floating Action Button (Bubble) */}
       <button
         onClick={() => setOpen(o => !o)}
+        className="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center cursor-pointer z-[9999]"
         style={{
-          position: 'fixed',
-          bottom: '32px',
-          right: '32px',
-          width: '64px',
-          height: '64px',
-          borderRadius: '32px',
           background: 'var(--brand-600)',
           color: 'white',
           border: 'none',
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 9999,
           transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           transform: open ? 'scale(0.9) rotate(15deg)' : 'scale(1) rotate(0deg)',
         }}
@@ -410,21 +400,11 @@ Jawab dengan asik, informatif, dan langsung ke intinya!`;
 
       {/* Floating Chat Window */}
       <div
+        className="fixed bottom-[88px] right-6 md:bottom-[112px] md:right-8 w-[calc(100vw-48px)] md:w-[380px] h-[500px] md:h-[540px] max-h-[calc(100vh-120px)] rounded-2xl flex flex-col z-[9998] overflow-hidden"
         style={{
-          position: 'fixed',
-          bottom: '112px',
-          right: '32px',
-          width: '380px',
-          height: '540px',
-          maxHeight: 'calc(100vh - 140px)',
           background: 'var(--surface-card)',
           border: '1px solid var(--border-subtle)',
-          borderRadius: '24px',
           boxShadow: '0 16px 48px rgba(0,0,0,0.4)',
-          display: 'flex',
-          flexDirection: 'column',
-          zIndex: 9998,
-          overflow: 'hidden',
           opacity: open ? 1 : 0,
           pointerEvents: open ? 'auto' : 'none',
           transform: open ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
@@ -742,18 +722,18 @@ export default function CommandCenter() {
                   Pos WGG-01
                 </span>
                 <ChevronRight size={10} style={{ color: 'var(--text-disabled)' }} />
-                <span style={{ fontSize: '10px', fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--text-muted)' }}>
+                <span className="truncate" style={{ fontSize: '10px', fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--text-muted)' }}>
                   Sungai Wanggu
                 </span>
               </div>
-              <h1 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', margin: 0 }}>
+              <h1 className="text-lg md:text-[18px] font-bold text-[var(--text-primary)] tracking-[-0.02em] m-0">
                 TERAWANG{' '}
-                <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '15px' }}>— Sistem Pemantauan Dini</span>
+                <span className="block md:inline text-[13px] md:text-[15px] mt-0.5 md:mt-0 font-normal text-[var(--text-muted)]">— Sistem Pemantauan Dini</span>
               </h1>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 w-full lg:w-auto mt-2 lg:mt-0">
 
             <div
               style={{
@@ -783,6 +763,7 @@ export default function CommandCenter() {
             </div>
 
             <div
+              className="w-full sm:w-auto mt-1 sm:mt-0"
               style={{
                 display: 'flex', alignItems: 'center', gap: '10px',
                 padding: '8px 14px', borderRadius: 'var(--radius-lg)',
@@ -820,13 +801,13 @@ export default function CommandCenter() {
       {/* ── EWS GAUGE ── */}
       <div
         className="card"
-        style={{ padding: '12px 20px' }}
+        style={{ padding: '16px 20px' }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <span style={{ fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <span className="text-[9px] md:text-[10px] font-semibold tracking-[0.1em] text-[var(--text-muted)] uppercase">
             Ambang Batas EWS — Standar PUPR
           </span>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--font-jetbrains), monospace', color: 'var(--text-disabled)' }}>
+          <span className="text-[9px] md:text-[10px] font-[family-name:var(--font-jetbrains)] text-[var(--text-disabled)]">
             TMA ref: {data.tmaUltrasonic.toFixed(2)} m
           </span>
         </div>
