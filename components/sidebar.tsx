@@ -99,7 +99,7 @@ export function Sidebar() {
         <div
           style={{
             height: '72px', // Samakan dengan TopBar 72px
-            padding: expanded ? '0 16px' : '0',
+            padding: expanded ? '0 12px' : '0',
             borderBottom: '1px solid var(--border-subtle)',
             flexShrink: 0,
             display: 'flex',
@@ -108,9 +108,8 @@ export function Sidebar() {
             overflow: 'hidden',
           }}
         >
-          {/* Left: Spacer to push hamburger to right when expanded */}
-          <div style={{ flex: expanded ? 1 : 0, width: expanded ? 'auto' : '0px', opacity: expanded ? 1 : 0, transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
-            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.15em', paddingLeft: '4px', display: expanded ? 'block' : 'none' }}>
+          <div style={{ flex: expanded ? 1 : 0, width: expanded ? 'auto' : '0px', opacity: expanded ? 1 : 0, transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', overflow: 'hidden' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.15em', display: expanded ? 'block' : 'none', textAlign: 'left' }}>
               Menu Navigasi
             </span>
           </div>
