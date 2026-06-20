@@ -444,7 +444,7 @@ Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
       {/* Floating Button with EWS Pulse */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center cursor-pointer z-[9999]"
+        className="fixed bottom-[84px] right-4 md:bottom-8 md:right-8 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center cursor-pointer z-[9999]"
         style={{
           background: 'var(--brand-600)', color: 'white', border: 'none',
           transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
@@ -459,7 +459,7 @@ Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
 
       {/* Floating Chat Window */}
       <div
-        className="fixed bottom-[88px] right-6 md:bottom-[108px] md:right-8 w-[calc(100vw-48px)] md:w-[400px] h-[calc(100dvh-120px)] md:h-[570px] max-h-[600px] rounded-2xl flex flex-col z-[9998] overflow-hidden"
+        className="fixed bottom-[148px] right-4 md:bottom-[108px] md:right-8 w-[calc(100vw-32px)] md:w-[400px] h-[calc(100dvh-170px)] md:h-[570px] max-h-[600px] rounded-2xl flex flex-col z-[9998] overflow-hidden"
         style={{
           background: 'var(--surface-card)', border: '1px solid var(--border-subtle)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.45)',
@@ -485,11 +485,6 @@ Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-            <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)} style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.9)', fontSize: '9px', fontWeight: 600, padding: '4px 22px 4px 8px', borderRadius: '8px', outline: 'none', cursor: 'pointer', fontFamily: 'var(--font-jetbrains), monospace', appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23ffffff\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 5px center', backgroundSize: '10px' }}>
-              <option value="gemini-2.0-flash">Flash 2.0</option>
-              <option value="gemini-flash-latest">Flash (Cepat)</option>
-              <option value="gemini-1.5-pro">Pro (Analitik)</option>
-            </select>
             <button onClick={() => setMessages([])} title="Reset chat" style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <RefreshCw size={13} />
             </button>
@@ -556,11 +551,21 @@ Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
         </div>
 
         {/* Input Area */}
-        <div style={{ padding: '10px 14px 12px', background: 'var(--surface-card)', borderTop: '1px solid var(--border-subtle)', display: 'flex', gap: '10px', alignItems: 'flex-end', flexShrink: 0 }}>
-          <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={ewsStatus !== 'AMAN' ? `Status ${ewsStatus} — Tanya TERAWANG...` : 'Tulis pesan ke TERAWANG AI...'} rows={1} style={{ flex: 1, resize: 'none', border: `1px solid ${ewsStatus !== 'AMAN' ? ec.ring : 'var(--border-default)'}`, borderRadius: '18px', padding: '9px 14px', fontSize: '12px', lineHeight: 1.5, fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--surface-inset)', outline: 'none', overflowY: 'hidden', minHeight: '38px', maxHeight: '110px' }} onFocus={e => { e.target.style.borderColor = 'var(--brand-500)'; e.target.style.background = 'var(--surface-bg)'; }} onBlur={e => { e.target.style.borderColor = ewsStatus !== 'AMAN' ? ec.ring : 'var(--border-default)'; e.target.style.background = 'var(--surface-inset)'; }} />
-          <button onClick={send} disabled={loading || !input.trim()} style={{ width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: loading || !input.trim() ? 'var(--surface-inset)' : 'var(--brand-600)', border: 'none', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', flexShrink: 0, transition: 'all 0.2s', boxShadow: loading || !input.trim() ? 'none' : '0 4px 12px rgba(37,99,235,0.35)' }}>
-            <Send size={15} style={{ color: loading || !input.trim() ? 'var(--text-disabled)' : 'white', marginLeft: '2px' }} />
-          </button>
+        <div style={{ padding: '10px 14px 12px', background: 'var(--surface-card)', borderTop: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+          {/* Model Selector (Kiri Bawah) */}
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)} style={{ background: 'var(--surface-inset)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)', fontSize: '10px', fontWeight: 600, padding: '4px 22px 4px 10px', borderRadius: '8px', outline: 'none', cursor: 'pointer', fontFamily: 'var(--font-jetbrains), monospace', appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23888888\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '10px' }}>
+              <option value="gemini-2.0-flash">⚡ Gemini Flash 2.0</option>
+              <option value="gemini-flash-latest">🚀 Gemini Flash</option>
+              <option value="gemini-1.5-pro">🧠 Gemini Pro</option>
+            </select>
+          </div>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+            <textarea value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={ewsStatus !== 'AMAN' ? `Status ${ewsStatus} — Tanya TERAWANG...` : 'Tulis pesan ke TERAWANG AI...'} rows={1} style={{ flex: 1, resize: 'none', border: `1px solid ${ewsStatus !== 'AMAN' ? ec.ring : 'var(--border-default)'}`, borderRadius: '18px', padding: '9px 14px', fontSize: '12px', lineHeight: 1.5, fontFamily: 'inherit', color: 'var(--text-primary)', background: 'var(--surface-inset)', outline: 'none', overflowY: 'hidden', minHeight: '38px', maxHeight: '110px' }} onFocus={e => { e.target.style.borderColor = 'var(--brand-500)'; e.target.style.background = 'var(--surface-bg)'; }} onBlur={e => { e.target.style.borderColor = ewsStatus !== 'AMAN' ? ec.ring : 'var(--border-default)'; e.target.style.background = 'var(--surface-inset)'; }} />
+            <button onClick={send} disabled={loading || !input.trim()} style={{ width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: loading || !input.trim() ? 'var(--surface-inset)' : 'var(--brand-600)', border: 'none', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', flexShrink: 0, transition: 'all 0.2s', boxShadow: loading || !input.trim() ? 'none' : '0 4px 12px rgba(37,99,235,0.35)' }}>
+              <Send size={15} style={{ color: loading || !input.trim() ? 'var(--text-disabled)' : 'white', marginLeft: '2px' }} />
+            </button>
+          </div>
         </div>
       </div>
 
