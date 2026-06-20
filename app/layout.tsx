@@ -10,12 +10,12 @@ import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const SYSTEM_CONFIG = {
-  appName:     'TERAWANG',
+  appName: 'TERAWANG',
   stationNode: 'Pos WGG-01 · Sungai Wanggu',
-  agency:      'BBWS Sulawesi IV',
-  version:     'v2.1.0',
+  agency: 'BBWS Sulawesi IV',
+  version: 'v2.1.0',
   coordinates: '4°01′S 122°31′E',
-  status:      'ONLINE',
+  status: 'ONLINE',
 } as const;
 
 // ── Typography ────────────────────────────────────────────────────────────────
@@ -43,11 +43,17 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default:  `${SYSTEM_CONFIG.appName} | ${SYSTEM_CONFIG.stationNode}`,
+    default: `${SYSTEM_CONFIG.appName} | ${SYSTEM_CONFIG.stationNode}`,
     template: `%s | ${SYSTEM_CONFIG.appName}`,
   },
   description: 'Sistem pemantauan hidrologi real-time Sungai Wanggu, Kendari — BWS Sulawesi IV.',
+  manifest: '/manifest.json',
   robots: { index: false, follow: false },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: SYSTEM_CONFIG.appName,
+  },
 };
 
 // ── Top Bar ───────────────────────────────────────────────────────────────────
@@ -55,7 +61,7 @@ export const metadata: Metadata = {
 function TopBar() {
   return (
     <header className="h-[72px] bg-[var(--surface-card)] border-b border-[var(--border-subtle)] flex items-center justify-between px-6 lg:px-8 relative z-30 shrink-0 shadow-sm">
-      
+
       {/* Left: Brand mark + station identity */}
       <div className="flex items-center gap-4 pl-12 md:pl-0">
         {/* Logo mark - Enlarged & stylized */}
@@ -79,11 +85,21 @@ function TopBar() {
         </div>
       </div>
 
-      {/* Center: Divider line (Hidden on small screens) */}
-      <div
-        className="flex-1 max-w-[300px] h-px bg-gradient-to-r from-transparent via-[var(--border-strong)] to-transparent mx-8 hidden lg:block opacity-30"
-        aria-hidden="true"
-      />
+      {/* Center: Custom Banner */}
+      <div className="flex-1 h-full hidden lg:flex justify-center items-center overflow-hidden mx-6">
+        <div className="relative h-full w-full max-w-[500px]">
+          {/* Masking gradients to blend smoothly with the left and right sides */}
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[var(--surface-card)] to-transparent z-10" />
+          <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[var(--surface-card)] to-transparent z-10" />
+
+          <img
+            src="/terawang_banner.png"
+            alt="TERAWANG Banner"
+            className="h-full w-full object-cover opacity-90"
+            style={{ objectPosition: 'center 75%' }}
+          />
+        </div>
+      </div>
 
       {/* Right: System status pills */}
       <div className="flex items-center gap-5">
@@ -147,32 +163,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SkipLink />
 
           {/* ── Top bar: fixed height, full width ── */}
-        <TopBar />
+          <TopBar />
 
-        {/* ── Body: sidebar + main ── */}
-        <div className="flex flex-1 overflow-hidden bg-[var(--surface-bg)]">
-          
-          {/* Sidebar */}
-          <Sidebar />
+          {/* ── Body: sidebar + main ── */}
+          <div className="flex flex-1 overflow-hidden bg-[var(--surface-bg)]">
 
-          {/* Main content area */}
-          <main
-            id="main-content"
-            className="flex-1 min-w-0 flex flex-col overflow-hidden bg-[var(--surface-bg)] shadow-[inset_1px_0_0_var(--border-subtle)]"
-          >
-            {/* Scrollable content shell */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth scrollbar-hide">
-              
-              {/* Inner padding */}
-              <div className="max-w-[1440px] mx-auto px-5 md:px-7 py-6 pb-12">
-                <PageTransitionWrapper>
-                  {children}
-                </PageTransitionWrapper>
+            {/* Sidebar */}
+            <Sidebar />
+
+            {/* Main content area */}
+            <main
+              id="main-content"
+              className="flex-1 min-w-0 flex flex-col overflow-hidden bg-[var(--surface-bg)] shadow-[inset_1px_0_0_var(--border-subtle)]"
+            >
+              {/* Scrollable content shell */}
+              <div className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth scrollbar-hide">
+
+                {/* Inner padding */}
+                <div className="max-w-[1440px] mx-auto px-5 md:px-7 py-6 pb-12">
+                  <PageTransitionWrapper>
+                    {children}
+                  </PageTransitionWrapper>
+                </div>
+
               </div>
-
-            </div>
-          </main>
-        </div>
+            </main>
+          </div>
         </ThemeProvider>
       </body>
     </html>

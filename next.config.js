@@ -1,4 +1,9 @@
 /** @type {import('next').NextConfig} */
+const withPWA = require('@ducanh2912/next-pwa').default({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+});
+
 const nextConfig = {
   // Transpile Three.js and React Three Fiber for proper bundling
   transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
@@ -16,4 +21,4 @@ const nextConfig = {
   reactStrictMode: true,
 };
 
-module.exports = nextConfig;
+module.exports = withPWA(nextConfig);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import dynamic from 'next/dynamic';
 import mqtt, { MqttClient } from 'mqtt';
 import {
@@ -63,19 +64,19 @@ const GISMap = dynamic(() => import('@/components/map/GISMap'), {
 
 interface TelemetryState {
   tmaHydrostatic: number;
-  tmaUltrasonic:  number;
-  deviation:      number;
-  rainRate:       number;
-  flowRate1:      number; // Tambahan Wide Table
-  flowRate2:      number; // Tambahan Wide Table
-  velocity:       number; // Tambahan Wide Table
-  discharge:      number; // Tambahan Wide Table
+  tmaUltrasonic: number;
+  deviation: number;
+  rainRate: number;
+  flowRate1: number; // Tambahan Wide Table
+  flowRate2: number; // Tambahan Wide Table
+  velocity: number; // Tambahan Wide Table
+  discharge: number; // Tambahan Wide Table
   batteryVoltage: number;
-  solarCurrent:   number;
-  loraRssi:       number;
-  ewsStatus:      'AMAN' | 'WASPADA' | 'SIAGA' | 'AWAS';
-  relay1Siren:    boolean;
-  relay2Alarm:    boolean;
+  solarCurrent: number;
+  loraRssi: number;
+  ewsStatus: 'AMAN' | 'WASPADA' | 'SIAGA' | 'AWAS';
+  relay1Siren: boolean;
+  relay2Alarm: boolean;
 }
 
 interface AiMessage {
@@ -84,13 +85,13 @@ interface AiMessage {
 }
 
 const MQTT_BROKER = 'wss://f06e9090.ala.asia-southeast1.emqxsl.com:8084/mqtt';
-const MQTT_TOPIC  = 'awlr/wanggu/sensor';
+const MQTT_TOPIC = 'awlr/wanggu/sensor';
 
 const EWS_CONFIG = {
-  AMAN:    { label: 'Siaga IV — Aman',    color: 'var(--ews-aman)',    bg: 'var(--ews-aman-bg)',    border: '#BBF7D0', dotBg: '#BBF7D0' },
+  AMAN: { label: 'Siaga IV — Aman', color: 'var(--ews-aman)', bg: 'var(--ews-aman-bg)', border: '#BBF7D0', dotBg: '#BBF7D0' },
   WASPADA: { label: 'Siaga III — Waspada', color: 'var(--ews-waspada)', bg: 'var(--ews-waspada-bg)', border: '#FDE68A', dotBg: '#FDE68A' },
-  SIAGA:   { label: 'Siaga II — Siaga',   color: 'var(--ews-siaga)',   bg: 'var(--ews-siaga-bg)',   border: '#FDBA74', dotBg: '#FDBA74' },
-  AWAS:    { label: 'Siaga I — Awas',     color: 'var(--ews-awas)',    bg: 'var(--ews-awas-bg)',    border: '#FECACA', dotBg: '#FECACA' },
+  SIAGA: { label: 'Siaga II — Siaga', color: 'var(--ews-siaga)', bg: 'var(--ews-siaga-bg)', border: '#FDBA74', dotBg: '#FDBA74' },
+  AWAS: { label: 'Siaga I — Awas', color: 'var(--ews-awas)', bg: 'var(--ews-awas-bg)', border: '#FECACA', dotBg: '#FECACA' },
 } as const;
 
 const EWS_LEVELS = ['AMAN', 'WASPADA', 'SIAGA', 'AWAS'] as const;
@@ -288,7 +289,7 @@ const GaugeWidget = ({ value, max, label, color, unit }: any) => {
   const circumference = 2 * Math.PI * radius;
   const percentage = Math.min(value / max, 1);
   const offset = circumference - percentage * circumference;
-  
+
   return (
     <div className="card group" style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', background: 'var(--surface-card)', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: `linear-gradient(90deg, ${color}, transparent)`, opacity: 0.8, transition: 'opacity var(--duration-base)' }} className="group-hover:opacity-100" />
@@ -313,11 +314,16 @@ const GaugeWidget = ({ value, max, label, color, unit }: any) => {
 // ── AI Assist Panel ───────────────────────────────────────────────────────────
 
 function AiAssistPanel({ telemetry, ewsLabel }: { telemetry: TelemetryState; ewsLabel: string }) {
-  const [open, setOpen]       = useState(false);
-  const [input, setInput]     = useState('');
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState('');
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const SYSTEM_PROMPT = `Kamu adalah asisten hidrologi AWLR Command Center untuk Pos WGG-01 Sungai Wanggu, Kendari, Sulawesi Tenggara.
 Proyek ini milik BBWS Sulawesi IV / Ditjen SDA Kementerian PUPR.
@@ -332,6 +338,10 @@ Konteks telemetri saat ini:
 - Tegangan baterai: ${telemetry.batteryVoltage.toFixed(1)} V
 - Arus panel surya: ${telemetry.solarCurrent.toFixed(2)} A
 - RSSI LoRa: ${telemetry.loraRssi} dBm
+
+Jika operator menyuruh Anda untuk mengirim pesan peringatan atau informasi ke WhatsApp, Anda WAJIB membalas dengan menyertakan tag khusus ini di awal atau akhir jawaban Anda:
+[KIRIM_WA: isi pesan yang akan dikirim ke WhatsApp]
+
 Berikan jawaban singkat, akurat, dan langsung dapat ditindaklanjuti oleh operator lapangan.`;
 
   async function send() {
@@ -367,7 +377,9 @@ Berikan jawaban singkat, akurat, dan langsung dapat ditindaklanjuti oleh operato
     'Apakah kecepatan arus sungai melampaui batas aman?',
   ];
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <>
       {/* Floating Action Button (Bubble) */}
       <button
@@ -532,7 +544,8 @@ Berikan jawaban singkat, akurat, dan langsung dapat ditindaklanjuti oleh operato
           40% { transform: translateY(-4px); opacity: 1; }
         }
       `}</style>
-    </>
+    </>,
+    document.body
   );
 }
 
@@ -541,22 +554,22 @@ Berikan jawaban singkat, akurat, dan langsung dapat ditindaklanjuti oleh operato
 export default function CommandCenter() {
   const [data, setData] = useState<TelemetryState>({
     tmaHydrostatic: 0.00,
-    tmaUltrasonic:  0.00,
-    deviation:      0.00,
-    rainRate:       0.0,
-    flowRate1:      0.0,
-    flowRate2:      0.0,
-    velocity:       0.0,
-    discharge:      0.0,
+    tmaUltrasonic: 0.00,
+    deviation: 0.00,
+    rainRate: 0.0,
+    flowRate1: 0.0,
+    flowRate2: 0.0,
+    velocity: 0.0,
+    discharge: 0.0,
     batteryVoltage: 12.6,
-    solarCurrent:   1.45,
-    loraRssi:       -68,
-    ewsStatus:      'AMAN',
-    relay1Siren:    false, 
-    relay2Alarm:    false, 
+    solarCurrent: 1.45,
+    loraRssi: -68,
+    ewsStatus: 'AMAN',
+    relay1Siren: false,
+    relay2Alarm: false,
   });
 
-  const [lastUpdated, setLastUpdated]         = useState<string>('Menunggu data...');
+  const [lastUpdated, setLastUpdated] = useState<string>('Menunggu data...');
   const [connectionStatus, setConnectionStatus] = useState<'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'ERROR'>('CONNECTING');
   const clientRef = useRef<MqttClient | null>(null);
 
@@ -571,10 +584,10 @@ export default function CommandCenter() {
       reconnectPeriod: 2000,
     });
 
-    clientRef.current.on('connect',   () => { setConnectionStatus('CONNECTED'); clientRef.current?.subscribe(MQTT_TOPIC, { qos: 0 }); });
+    clientRef.current.on('connect', () => { setConnectionStatus('CONNECTED'); clientRef.current?.subscribe(MQTT_TOPIC, { qos: 0 }); });
     clientRef.current.on('reconnect', () => setConnectionStatus('CONNECTING'));
-    clientRef.current.on('error',     () => setConnectionStatus('ERROR'));
-    clientRef.current.on('offline',   () => setConnectionStatus('DISCONNECTED'));
+    clientRef.current.on('error', () => setConnectionStatus('ERROR'));
+    clientRef.current.on('offline', () => setConnectionStatus('DISCONNECTED'));
 
     clientRef.current.on('message', (topic, message) => {
       if (topic !== MQTT_TOPIC) return;
@@ -582,7 +595,7 @@ export default function CommandCenter() {
         const payload = JSON.parse(message.toString());
         setData(prev => {
           const next = { ...prev };
-          
+
           // PENYESUAIAN WIDE TABLE PATTERN
           // Semua properti dari ESP32 langsung di-mapping tanpa filter 'parameter'
           if (payload.tmaUltrasonic !== undefined) next.tmaUltrasonic = Number(payload.tmaUltrasonic);
@@ -593,7 +606,7 @@ export default function CommandCenter() {
           if (payload.velocity !== undefined) next.velocity = Number(payload.velocity);
           if (payload.discharge !== undefined) next.discharge = Number(payload.discharge);
           if (payload.ewsStatus) next.ewsStatus = payload.ewsStatus;
-          
+
           if (payload.relay1Siren !== undefined) next.relay1Siren = Boolean(payload.relay1Siren);
           if (payload.relay2Alarm !== undefined) next.relay2Alarm = Boolean(payload.relay2Alarm);
 
@@ -609,15 +622,55 @@ export default function CommandCenter() {
     return () => { clientRef.current?.end(); };
   }, []);
 
-  const ews  = EWS_CONFIG[data.ewsStatus];
-  const connOk   = connectionStatus === 'CONNECTED';
+  // ── WHATSAPP INTEGRATION ──
+  const dataRef = useRef(data);
+  const lastEwsRef = useRef(data.ewsStatus);
+
+  // Update ref to avoid stale closure in setInterval
+  useEffect(() => { dataRef.current = data; }, [data]);
+
+  // 1. Instant Trigger for SIAGA / AWAS
+  useEffect(() => {
+    if ((data.ewsStatus === 'SIAGA' || data.ewsStatus === 'AWAS') && data.ewsStatus !== lastEwsRef.current) {
+      lastEwsRef.current = data.ewsStatus;
+      fetch('/api/whatsapp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `🚨 *PERINGATAN DINI BANJIR: ${data.ewsStatus}* 🚨\n\nLokasi: Pos WGG-01 Sungai Wanggu\nTinggi Air: ${data.tmaHydrostatic.toFixed(2)} m\nDebit: ${data.discharge.toFixed(2)} m³/s\nCurah Hujan: ${data.rainRate.toFixed(1)} mm/jam\n\n⚠️ Harap warga di sekitar segera waspada dan mengambil tindakan pengamanan!`
+        })
+      }).catch(err => console.error("Gagal kirim darurat WA", err));
+    } else if (data.ewsStatus !== lastEwsRef.current) {
+      lastEwsRef.current = data.ewsStatus; // Update ref when status drops back to AMAN
+    }
+  }, [data.ewsStatus, data.tmaHydrostatic, data.discharge, data.rainRate]);
+
+  // 2. Periodic Broadcast (Every 30 Minutes)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const current = dataRef.current;
+      fetch('/api/whatsapp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `📊 *UPDATE TELEMETRI TERAWANG*\nPos WGG-01 Sungai Wanggu\n🕒 Waktu: ${new Date().toLocaleString('id-ID')}\n\n🌊 TMA: ${current.tmaHydrostatic.toFixed(2)} m\n💧 Debit: ${current.discharge.toFixed(2)} m³/s\n🌧️ Hujan: ${current.rainRate.toFixed(1)} mm/jam\nℹ️ Status EWS: *${current.ewsStatus}*\n\n_Pesan otomatis dikirim setiap 30 menit dari Command Center._`
+        })
+      }).catch(err => console.error("Gagal kirim rutin WA", err));
+    }, 30 * 60 * 1000); // 30 Menit = 1.800.000 ms
+
+    return () => clearInterval(interval);
+  }, []);
+
+
+  const ews = EWS_CONFIG[data.ewsStatus];
+  const connOk = connectionStatus === 'CONNECTED';
   const connWait = connectionStatus === 'CONNECTING';
 
   const connStyle = {
-    CONNECTED:    { bg: 'var(--ews-aman-bg)',    color: 'var(--ews-aman)',    border: '#BBF7D0' },
-    CONNECTING:   { bg: 'var(--ews-waspada-bg)', color: 'var(--ews-waspada)', border: '#FDE68A' },
-    DISCONNECTED: { bg: 'var(--ews-awas-bg)',    color: 'var(--ews-awas)',    border: '#FECACA' },
-    ERROR:        { bg: 'var(--ews-awas-bg)',    color: 'var(--ews-awas)',    border: '#FECACA' },
+    CONNECTED: { bg: 'var(--ews-aman-bg)', color: 'var(--ews-aman)', border: '#BBF7D0' },
+    CONNECTING: { bg: 'var(--ews-waspada-bg)', color: 'var(--ews-waspada)', border: '#FDE68A' },
+    DISCONNECTED: { bg: 'var(--ews-awas-bg)', color: 'var(--ews-awas)', border: '#FECACA' },
+    ERROR: { bg: 'var(--ews-awas-bg)', color: 'var(--ews-awas)', border: '#FECACA' },
   }[connectionStatus];
 
   const relayActive = data.relay1Siren || data.relay2Alarm;
@@ -736,7 +789,7 @@ export default function CommandCenter() {
       {/* ── KPI CARDS ── */}
       <div>
         <SectionHeader>Pemantauan Hidrologi & Fusi Sensor</SectionHeader>
-        
+
         {/* Custom Bespoke Widgets Row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
           <WaterLevelWidget value={data.tmaHydrostatic} max={3.5} label="TMA Hidrostatis" color="#38bdf8" unit="M" />
@@ -811,13 +864,13 @@ export default function CommandCenter() {
                   Lampu Sirine (IN1)
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Lightbulb 
-                    size={13} 
-                    style={{ 
-                      color: data.relay1Siren ? '#F59E0B' : 'var(--text-disabled)', 
+                  <Lightbulb
+                    size={13}
+                    style={{
+                      color: data.relay1Siren ? '#F59E0B' : 'var(--text-disabled)',
                       fill: data.relay1Siren ? '#F59E0B' : 'transparent',
                       transition: 'all 0.3s'
-                    }} 
+                    }}
                   />
                   <span style={{ fontSize: '11px', fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 700, color: data.relay1Siren ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                     {data.relay1Siren ? 'MENYALA' : 'MATI'}
@@ -829,13 +882,13 @@ export default function CommandCenter() {
                   Alarm Suara (IN2)
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Siren 
-                    size={13} 
-                    style={{ 
+                  <Siren
+                    size={13}
+                    style={{
                       color: data.relay2Alarm ? '#EF4444' : 'var(--text-disabled)',
                       animation: data.relay2Alarm ? 'pulse 1s infinite' : 'none',
                       transition: 'color 0.3s'
-                    }} 
+                    }}
                   />
                   <span style={{ fontSize: '11px', fontFamily: 'var(--font-jetbrains), monospace', fontWeight: 700, color: data.relay2Alarm ? 'var(--text-primary)' : 'var(--text-muted)' }}>
                     {data.relay2Alarm ? 'MENYALA' : 'MATI'}
