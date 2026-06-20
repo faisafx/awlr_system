@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const { systemPrompt, messages } = await req.json();
+    const { systemPrompt, messages, selectedModel } = await req.json();
 
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
@@ -20,12 +20,14 @@ export async function POST(req: Request) {
       parts: [{ text: m.content }]
     }));
 
+    const targetModel = selectedModel || 'gemini-flash-latest';
+
     const response = await ai.models.generateContent({
-      model: 'gemini-flash-latest',
+      model: targetModel,
       contents: formattedMessages,
       config: {
         systemInstruction: systemPrompt,
-        temperature: 0.2, // Temperatur rendah agar AI lebih presisi dan analitis (tidak berhalusinasi)
+        temperature: 0.7, // Temperatur dinaikkan (0.7) agar AI lebih luwes, asik, dan tidak terlalu kaku
       }
     });
 

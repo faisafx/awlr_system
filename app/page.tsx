@@ -318,6 +318,7 @@ function AiAssistPanel({ telemetry, ewsLabel }: { telemetry: TelemetryState; ews
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<AiMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gemini-flash-latest');
   const bottomRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -325,24 +326,23 @@ function AiAssistPanel({ telemetry, ewsLabel }: { telemetry: TelemetryState; ews
     setMounted(true);
   }, []);
 
-  const SYSTEM_PROMPT = `Kamu adalah asisten hidrologi AWLR Command Center untuk Pos WGG-01 Sungai Wanggu, Kendari, Sulawesi Tenggara.
-Proyek ini milik BBWS Sulawesi IV / Ditjen SDA Kementerian PUPR.
-Jawab dalam Bahasa Indonesia yang lugas dan teknis. Fokus pada analisis banjir, interpretasi data sensor, dan rekomendasi operasional.
+  const SYSTEM_PROMPT = `Kamu adalah "TERAWANG", asisten hidrologi pintar, asik, dan sedikit humoris untuk Pos WGG-01 Sungai Wanggu (BBWS Sulawesi IV).
+Gayamu santai, elegan, tidak terlalu kaku, dan seru diajak bercanda, TAPI kamu tetap SANGAT PROFESIONAL dan serius saat membahas bahaya banjir atau data teknis penting.
+Gunakan bahasa Indonesia sehari-hari, sedikit gaul (contoh: 'aku', 'kamu', 'nih', 'yuk') jika konteksnya santai, tapi langsung ganti ke mode waspada/darurat jika status EWS sedang bahaya.
+
 Konteks telemetri saat ini:
 - TMA Ultrasonik: ${telemetry.tmaUltrasonic.toFixed(2)} m
 - TMA Hidrostatik: ${telemetry.tmaHydrostatic.toFixed(2)} m
 - Debit Sungai: ${telemetry.discharge.toFixed(2)} m³/s
 - Kecepatan Arus: ${telemetry.velocity.toFixed(2)} m/s
-- Intensitas hujan: ${telemetry.rainRate.toFixed(1)} mm/jam
+- Intensitas Hujan: ${telemetry.rainRate.toFixed(1)} mm/jam
 - Status EWS: ${ewsLabel}
-- Tegangan baterai: ${telemetry.batteryVoltage.toFixed(1)} V
-- Arus panel surya: ${telemetry.solarCurrent.toFixed(2)} A
-- RSSI LoRa: ${telemetry.loraRssi} dBm
+- Baterai: ${telemetry.batteryVoltage.toFixed(1)} V
 
-Jika operator menyuruh Anda untuk mengirim pesan peringatan atau informasi ke WhatsApp, Anda WAJIB membalas dengan menyertakan tag khusus ini di awal atau akhir jawaban Anda:
+Jika operator menyuruh mengirim pesan peringatan ke WhatsApp, kamu WAJIB menyertakan tag khusus ini di awal atau akhir jawaban:
 [KIRIM_WA: isi pesan yang akan dikirim ke WhatsApp]
 
-Berikan jawaban singkat, akurat, dan langsung dapat ditindaklanjuti oleh operator lapangan.`;
+Jawab dengan asik, informatif, dan langsung ke intinya!`;
 
   async function send() {
     const q = input.trim();
@@ -356,7 +356,7 @@ Berikan jawaban singkat, akurat, dan langsung dapat ditindaklanjuti oleh operato
       const res = await fetch('/api/ai-assist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemPrompt: SYSTEM_PROMPT, messages: next }),
+        body: JSON.stringify({ systemPrompt: SYSTEM_PROMPT, messages: next, selectedModel }),
       });
       const data = await res.json();
       setMessages([...next, { role: 'assistant', content: data.content ?? 'Gagal mendapat respons.' }]);
@@ -432,17 +432,58 @@ Berikan jawaban singkat, akurat, dan langsung dapat ditindaklanjuti oleh operato
           transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         }}
       >
-        {/* Header */}
-        <div style={{ padding: '20px', background: 'linear-gradient(135deg, var(--brand-600) 0%, var(--brand-700) 100%)', color: 'white', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '20px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Bot size={22} />
-          </div>
-          <div>
-            <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.2 }}>TERAWANG Assistant</div>
-            <div style={{ fontSize: '11px', fontWeight: 600, opacity: 0.8, letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: '2px' }}>
-              • Online (Gemini 2.0 Flash)
+        {/* Header (Glassmorphism & Model Selector) */}
+        <div style={{ 
+          padding: '20px', 
+          background: 'linear-gradient(135deg, rgba(37,99,235,0.95) 0%, rgba(30,58,138,0.9) 100%)', 
+          backdropFilter: 'blur(10px)', 
+          borderBottom: '1px solid rgba(255,255,255,0.1)', 
+          color: 'white', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          zIndex: 10 
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '20px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <Bot size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.2 }}>TERAWANG AI</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '3px', background: '#4ADE80', boxShadow: '0 0 8px rgba(74, 222, 128, 0.6)', animation: 'pulse 2s infinite' }}></span>
+                <span style={{ fontSize: '9px', fontWeight: 700, opacity: 0.9, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  Online
+                </span>
+              </div>
             </div>
           </div>
+          
+          <select 
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              color: 'white',
+              fontSize: '10px',
+              padding: '6px 24px 6px 12px',
+              borderRadius: '12px',
+              outline: 'none',
+              cursor: 'pointer',
+              backdropFilter: 'blur(8px)',
+              fontFamily: 'var(--font-jetbrains), monospace',
+              appearance: 'none',
+              backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'white\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 8px center',
+              backgroundSize: '12px',
+            }}
+          >
+            <option value="gemini-flash-latest" style={{ color: 'black' }}>Gemini Flash (Cepat)</option>
+            <option value="gemini-1.5-pro" style={{ color: 'black' }}>Gemini Pro (Pintar)</option>
+            <option value="gemini-2.0-flash" style={{ color: 'black' }}>Gemini 2.0 (Bisa Limit)</option>
+          </select>
         </div>
 
         {/* Chat Body */}
