@@ -50,16 +50,20 @@ export async function POST(request: Request) {
 
     const validData = validation.data;
 
-    // 5. DATABASE INSERT DENGAN OPTIMASI SELECT & RELASI
+    // 5. DATABASE INSERT DENGAN MAPPING KE WIDE TABLE PATTERN
+    const dataObj: any = {
+      nodeId: validData.nodeId,
+      ewsStatus: validData.status as any,
+    };
+
+    // Mapping parameter (misal: 'tmaUltrasonic') ke kolom tabel yang sesuai
+    const allowedParameters = ['tmaUltrasonic', 'tmaHydrostatic', 'curahHujan', 'flowRate1', 'flowRate2', 'velocity', 'discharge'];
+    if (allowedParameters.includes(validData.parameter)) {
+      dataObj[validData.parameter] = validData.rawValue;
+    }
+
     const newLog = await prisma.telemetryLog.create({
-      data: {
-        nodeId: validData.nodeId,     // Pastikan ID ini sudah ada di tabel StationNode
-        parameter: validData.parameter,
-        rawValue: validData.rawValue,
-        unit: validData.unit,
-        // TypeScript akan menganggap validData.status sesuai dengan Enum WaterStatus
-        status: validData.status as any, 
-      },
+      data: dataObj,
       // OPTIMASI NETWORK: Cukup kembalikan ID saja agar respons API sangat ringan.
       select: {
         id: true, 
