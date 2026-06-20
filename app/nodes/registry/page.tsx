@@ -12,8 +12,18 @@ import {
   Clock, Package, HardDrive, Hammer, UserCheck, BarChart2 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { HardwareAssetSchema } from '@/app/api/hardware/route';
-
+export interface HardwareAssetSchema {
+  assetCode: string;
+  componentName: string;
+  modelNumber: string;
+  installationDate: string;
+  operatingHours: number;
+  healthIndex: number;
+  calibrationDueDays: number;
+  technician: string;
+  nodeId: string;
+  criticality: string;
+}
 export default function HardwareRegistryPage() {
   const [assets, setAssets] = useState<HardwareAssetSchema[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<HardwareAssetSchema | null>(null);
@@ -99,7 +109,7 @@ export default function HardwareRegistryPage() {
           <div>
             <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 font-mono block">Butuh Kalibrasi (&lt;30 Hari)</span>
             <span className="text-xl font-bold font-mono text-amber-400">
-              {assets.filter(a => a.calibration_due_days <= 30).length} Instrumen
+              {assets.filter(a => a.calibrationDueDays <= 30).length} Instrumen
             </span>
           </div>
         </div>
@@ -111,7 +121,7 @@ export default function HardwareRegistryPage() {
           <div>
             <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 font-mono block">Rata-rata Kesehatan Aset</span>
             <span className="text-xl font-bold font-mono text-emerald-400">
-              {(assets.reduce((acc, curr) => acc + curr.health_index, 0) / assets.length).toFixed(0)}%
+              {(assets.reduce((acc, curr) => acc + curr.healthIndex, 0) / (assets.length || 1)).toFixed(0)}%
             </span>
           </div>
         </div>
@@ -134,33 +144,33 @@ export default function HardwareRegistryPage() {
               </thead>
               <tbody className="text-xs font-mono text-slate-300">
                 {assets.map((asset) => {
-                  const isCritical = asset.calibration_due_days <= 30;
+                  const isCritical = asset.calibrationDueDays <= 30;
                   return (
                     <tr 
-                      key={asset.asset_code} 
+                      key={asset.assetCode} 
                       onClick={() => setSelectedAsset(asset)}
                       className={cn(
                         "border-b border-white/5 hover:bg-white/[0.02] cursor-pointer transition-colors",
-                        selectedAsset?.asset_code === asset.asset_code ? "bg-cyan-500/5 text-cyan-300" : ""
+                        selectedAsset?.assetCode === asset.assetCode ? "bg-cyan-500/5 text-cyan-300" : ""
                       )}
                     >
                       <td className="p-3.5">
-                        <span className="font-bold text-slate-200 block font-sans">{asset.component_name}</span>
-                        <span className="text-[10px] text-slate-500 font-mono mt-0.5 block">{asset.model_number}</span>
+                        <span className="font-bold text-slate-200 block font-sans">{asset.componentName}</span>
+                        <span className="text-[10px] text-slate-500 font-mono mt-0.5 block">{asset.modelNumber}</span>
                       </td>
-                      <td className="p-3.5 text-slate-400">{asset.asset_code}</td>
+                      <td className="p-3.5 text-slate-400">{asset.assetCode}</td>
                       <td className="p-3.5">
                         <div className="flex items-center gap-2">
                           <div className="w-12 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                             <div 
                               className={cn(
                                 "h-full rounded-full",
-                                asset.health_index >= 85 ? "bg-emerald-500" : asset.health_index >= 75 ? "bg-amber-500" : "bg-rose-500"
+                                asset.healthIndex >= 85 ? "bg-emerald-500" : asset.healthIndex >= 75 ? "bg-amber-500" : "bg-rose-500"
                               )} 
-                              style={{ width: `${asset.health_index}%` }}
+                              style={{ width: `${asset.healthIndex}%` }}
                             />
                           </div>
-                          <span className="font-bold">{asset.health_index}%</span>
+                          <span className="font-bold">{asset.healthIndex}%</span>
                         </div>
                       </td>
                       <td className="p-3.5">
@@ -168,7 +178,7 @@ export default function HardwareRegistryPage() {
                           "px-2 py-0.5 rounded text-[10px] font-bold tracking-wide",
                           isCritical ? "bg-rose-500/10 text-rose-400 border border-rose-500/20 animate-pulse" : "bg-slate-800 text-slate-400"
                         )}>
-                          {asset.calibration_due_days} Hari
+                          {asset.calibrationDueDays} Hari
                         </span>
                       </td>
                     </tr>
@@ -187,24 +197,24 @@ export default function HardwareRegistryPage() {
                 <span className="text-[9px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20 font-mono font-bold tracking-wider uppercase">
                   Level Kritis: {selectedAsset.criticality}
                 </span>
-                <h2 className="text-sm font-bold text-slate-200 mt-2 font-sans">{selectedAsset.component_name}</h2>
-                <span className="text-[10px] text-slate-500 font-mono block mt-0.5">{selectedAsset.asset_code}</span>
+                <h2 className="text-sm font-bold text-slate-200 mt-2 font-sans">{selectedAsset.componentName}</h2>
+                <span className="text-[10px] text-slate-500 font-mono block mt-0.5">{selectedAsset.assetCode}</span>
               </div>
 
               <div className="space-y-3 font-mono text-xs">
                 <div className="flex justify-between p-2 rounded bg-slate-950/40 border border-white/[0.02]">
                   <span className="text-slate-500 flex items-center gap-1.5"><Calendar size={12} /> Instalasi Lapangan</span>
-                  <span className="text-slate-300 text-right">{selectedAsset.installation_date}</span>
+                  <span className="text-slate-300 text-right">{new Date(selectedAsset.installationDate).toLocaleDateString()}</span>
                 </div>
 
                 <div className="flex justify-between p-2 rounded bg-slate-950/40 border border-white/[0.02]">
                   <span className="text-slate-500 flex items-center gap-1.5"><Clock size={12} /> Durasi Aktif</span>
-                  <span className="text-slate-300 text-right font-bold">{selectedAsset.operating_hours.toLocaleString()} Jam</span>
+                  <span className="text-slate-300 text-right font-bold">{selectedAsset.operatingHours.toLocaleString()} Jam</span>
                 </div>
 
                 <div className="flex justify-between p-2 rounded bg-slate-950/40 border border-white/[0.02]">
                   <span className="text-slate-500 flex items-center gap-1.5"><Hammer size={12} /> Alokasi Titik</span>
-                  <span className="text-slate-300 text-right text-cyan-400">{selectedAsset.node_assignment}</span>
+                  <span className="text-slate-300 text-right text-cyan-400">{selectedAsset.nodeId}</span>
                 </div>
 
                 <div className="flex justify-between p-2 rounded bg-slate-950/40 border border-white/[0.02]">
@@ -214,7 +224,7 @@ export default function HardwareRegistryPage() {
               </div>
 
               <div className="pt-2">
-                {selectedAsset.calibration_due_days <= 30 ? (
+                {selectedAsset.calibrationDueDays <= 30 ? (
                   <div className="p-2.5 rounded-lg bg-rose-500/5 border border-rose-500/20 text-rose-400 text-[11px] flex gap-2 items-start">
                     <AlertTriangle size={14} className="shrink-0 mt-0.5" />
                     <p className="font-sans leading-relaxed">

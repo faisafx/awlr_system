@@ -28,7 +28,7 @@ export async function GET() {
           healthIndex: 82,
           calibrationDueDays: 14,
           technician: 'Faisal Fardani',
-          nodeAssignment: 'Jembatan Wanggu',
+          nodeId: 'WGG-01',
           criticality: 'HIGH'
         },
         {
@@ -40,7 +40,7 @@ export async function GET() {
           healthIndex: 91,
           calibrationDueDays: 102,
           technician: 'Faisal Fardani',
-          nodeAssignment: 'Jembatan Wanggu',
+          nodeId: 'WGG-01',
           criticality: 'HIGH'
         },
         {
@@ -52,7 +52,7 @@ export async function GET() {
           healthIndex: 74,
           calibrationDueDays: 45,
           technician: 'Munirkhan Genius',
-          nodeAssignment: 'Kolam Retensi Boulevard',
+          nodeId: 'WGG-01',
           criticality: 'MEDIUM'
         },
         {
@@ -64,7 +64,7 @@ export async function GET() {
           healthIndex: 100,
           calibrationDueDays: 360,
           technician: 'Faisal Fardani',
-          nodeAssignment: 'Saluran Inlet Wanggu',
+          nodeId: 'WGG-01',
           criticality: 'HIGH'
         },
         {
@@ -76,7 +76,7 @@ export async function GET() {
           healthIndex: 98,
           calibrationDueDays: 365,
           technician: 'Faisal Fardani',
-          nodeAssignment: 'Jembatan Wanggu',
+          nodeId: 'WGG-01',
           criticality: 'HIGH'
         },
         {
@@ -88,7 +88,7 @@ export async function GET() {
           healthIndex: 95,
           calibrationDueDays: 365,
           technician: 'Munirkhan Genius',
-          nodeAssignment: 'Jembatan Wanggu',
+          nodeId: 'WGG-01',
           criticality: 'MEDIUM'
         },
         {
@@ -100,10 +100,23 @@ export async function GET() {
           healthIndex: 88,
           calibrationDueDays: 120,
           technician: 'Faisal Fardani',
-          nodeAssignment: 'Jembatan Wanggu',
+          nodeId: 'WGG-01',
           criticality: 'MEDIUM'
         }
       ];
+
+      // Pastikan StationNode 'WGG-01' ada untuk memenuhi Foreign Key
+      await prisma.stationNode.upsert({
+        where: { id: 'WGG-01' },
+        update: {},
+        create: {
+          id: 'WGG-01',
+          name: 'Pos AWLR Jembatan Wanggu',
+          latitude: -4.0175,
+          longitude: 122.5152,
+          location: 'Jembatan Wanggu'
+        }
+      });
 
       // Insert ke database menggunakan Prisma
       await prisma.hardwareAsset.createMany({
