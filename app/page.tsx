@@ -440,7 +440,7 @@ Berikan jawaban singkat, akurat, dan langsung dapat ditindaklanjuti oleh operato
           <div>
             <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.2 }}>TERAWANG Assistant</div>
             <div style={{ fontSize: '11px', fontWeight: 600, opacity: 0.8, letterSpacing: '0.04em', textTransform: 'uppercase', marginTop: '2px' }}>
-              • Online (Gemini 2.5 Flash)
+              • Online (Gemini 2.0 Flash)
             </div>
           </div>
         </div>
