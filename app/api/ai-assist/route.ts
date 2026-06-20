@@ -68,6 +68,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ content: responseText });
   } catch (error: any) {
     console.error('Gemini Error:', error);
-    return NextResponse.json({ content: "Maaf, mesin AI sedang mengalami gangguan saat menganalisis data." }, { status: 500 });
+    if (error?.status === 429) {
+      return NextResponse.json({ content: "⚠️ Kuota API gratis telah habis atau limit rate tercapai (Error 429). Silakan tunggu sebentar lalu coba lagi, atau pilih model AI yang lain di pengaturan atas." }, { status: 200 });
+    }
+    return NextResponse.json({ content: "⚠️ Maaf, mesin AI sedang mengalami gangguan saat menganalisis data. Silakan coba lagi." }, { status: 200 });
   }
 }
