@@ -955,7 +955,16 @@ export default function CommandCenter() {
               action={<span className="badge neutral text-[9px] md:text-[10px]">CAD View</span>}
             />
             <div className="flex-1 relative">
-              <StationVisualizer />
+              <StationVisualizer sensorData={{
+                tmaHydrostatic: data.tmaHydrostatic,
+                tmaUltrasonic: data.tmaUltrasonic,
+                rainRate: data.rainRate,
+                flowRate1: data.flowRate1,
+                velocity: data.velocity,
+                discharge: data.discharge,
+                batteryVoltage: data.batteryVoltage,
+                ewsStatus: data.ewsStatus,
+              }} />
             </div>
           </div>
 

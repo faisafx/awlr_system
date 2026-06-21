@@ -1,173 +1,313 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// File: components/3d/StationVisualizer.tsx (Diubah menjadi 2D Blueprint)
-// Description: Lightweight, high-performance 2D SVG Schematic of the AWLR Station.
-// Features: Zero dependencies, JARVIS HUD aesthetic, embedded CSS animations,
-//           and technical measurement annotations.
+// File: components/3d/StationVisualizer.tsx
+// Description: Live 2D SVG Schematic of the AWLR Station with real sensor data,
+//              water flow animation, and responsive layout.
 // ─────────────────────────────────────────────────────────────────────────────
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
-export default function StationVisualizer() {
-  const [beamPulse, setBeamPulse] = useState(false);
+interface SensorData {
+  tmaHydrostatic: number;
+  tmaUltrasonic: number;
+  rainRate: number;
+  flowRate1: number;
+  velocity: number;
+  discharge: number;
+  batteryVoltage: number;
+  ewsStatus: 'AMAN' | 'WASPADA' | 'SIAGA' | 'AWAS';
+}
 
-  // Animasi gelombang ultrasonik mandiri
+const EWS_COLORS: Record<string, string> = {
+  AMAN: '#10b981',
+  WASPADA: '#eab308',
+  SIAGA: '#f97316',
+  AWAS: '#ef4444',
+};
+
+export default function StationVisualizer({ sensorData }: { sensorData?: SensorData }) {
+  const [tick, setTick] = useState(0);
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setBeamPulse(prev => !prev);
-    }, 1000);
+    const interval = setInterval(() => setTick(t => t + 1), 800);
     return () => clearInterval(interval);
   }, []);
 
+  const d = sensorData || {
+    tmaHydrostatic: 0, tmaUltrasonic: 0, rainRate: 0,
+    flowRate1: 0, velocity: 0, discharge: 0,
+    batteryVoltage: 12.6, ewsStatus: 'AMAN' as const,
+  };
+
+  // Hitung tinggi air relatif dalam SVG (max 5m = 250px area air)
+  const maxTMA = 5.0;
+  const waterHeight = Math.min(Math.max((d.tmaHydrostatic / maxTMA) * 250, 10), 250);
+  const waterY = 550 - waterHeight;
+
+  const ewsColor = EWS_COLORS[d.ewsStatus] || '#10b981';
+  const beamPulse = tick % 2 === 0;
+
+  // Partikel air mengalir (posisi bergeser setiap tick)
+  const particles = useMemo(() => {
+    const pts = [];
+    for (let i = 0; i < 12; i++) {
+      pts.push({
+        x: ((i * 45 + tick * 18) % 500),
+        y: waterY + 10 + (i % 3) * 30 + Math.sin(i * 1.2) * 15,
+        r: 2 + (i % 3),
+      });
+    }
+    return pts;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tick, waterY]);
+
   return (
-    <div className="relative w-full h-full bg-[#020617] overflow-hidden flex items-center justify-center p-2 font-mono select-none">
-      
-      {/* Efek CRT Scanline Background */}
-      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-30 z-10"></div>
-      
-      {/* ── 2D SVG BLUEPRINT ENGINE ── */}
-      <svg 
-        viewBox="0 0 600 700" 
-        className="w-full h-full max-h-full drop-shadow-[0_0_15px_rgba(6,182,212,0.1)] relative z-0"
+    <div className="relative w-full h-full bg-[#020617] overflow-hidden flex items-center justify-center font-mono select-none">
+
+      {/* Efek CRT Scanline */}
+      <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-20 z-10"></div>
+
+      {/* ── SVG BLUEPRINT ── */}
+      <svg
+        viewBox="0 0 600 650"
+        className="w-full h-full drop-shadow-[0_0_15px_rgba(6,182,212,0.1)] relative z-0"
         preserveAspectRatio="xMidYMid meet"
       >
         <defs>
-          {/* Pola Grid Blueprint */}
-          <pattern id="blueprintGrid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <rect width="40" height="40" fill="none" />
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(6, 182, 212, 0.1)" strokeWidth="1" />
-          </pattern>
-          <pattern id="blueprintGridSmall" width="10" height="10" patternUnits="userSpaceOnUse">
-            <rect width="10" height="10" fill="none" />
-            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(6, 182, 212, 0.03)" strokeWidth="0.5" />
+          <pattern id="bpGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(6,182,212,0.08)" strokeWidth="0.5" />
           </pattern>
 
-          {/* Gradien Material Metal & Air */}
           <linearGradient id="metalGrad" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#1e293b" />
             <stop offset="50%" stopColor="#475569" />
             <stop offset="100%" stopColor="#1e293b" />
           </linearGradient>
-          
-          <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(6, 182, 212, 0.4)" />
-            <stop offset="100%" stopColor="rgba(6, 182, 212, 0.05)" />
+
+          <linearGradient id="waterBodyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(6,182,212,0.45)" />
+            <stop offset="60%" stopColor="rgba(6,182,212,0.15)" />
+            <stop offset="100%" stopColor="rgba(6,182,212,0.03)" />
           </linearGradient>
 
           <linearGradient id="beamGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(139, 92, 246, 0.8)" />
-            <stop offset="100%" stopColor="rgba(139, 92, 246, 0.0)" />
+            <stop offset="0%" stopColor="rgba(139,92,246,0.85)" />
+            <stop offset="100%" stopColor="rgba(139,92,246,0.0)" />
           </linearGradient>
+
+          {/* Glow filter untuk data value badges */}
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+
+          {/* Animasi gelombang permukaan air */}
+          <clipPath id="waterClip">
+            <rect x="0" y={waterY} width="500" height={600 - waterY} />
+          </clipPath>
         </defs>
 
-        {/* Render Latar Belakang Grid */}
-        <rect width="100%" height="100%" fill="url(#blueprintGridSmall)" />
-        <rect width="100%" height="100%" fill="url(#blueprintGrid)" />
+        {/* Grid */}
+        <rect width="100%" height="100%" fill="url(#bpGrid)" />
 
-        <g transform="translate(50, 50)">
-          
-          {/* ── ELEMEN ALAM (Dasar Sungai & Air) ── */}
-          <path d="M 0 550 Q 150 540 250 550 T 500 550 L 500 600 L 0 600 Z" fill="#0f172a" stroke="#1e293b" strokeWidth="2" />
-          <rect x="0" y="350" width="500" height="200" fill="url(#waterGrad)" />
-          <line x1="0" y1="350" x2="500" y2="350" stroke="#06b6d4" strokeWidth="1.5" strokeDasharray="4 4" className="animate-[pulse_2s_ease-in-out_infinite]" />
-          <text x="15" y="340" fill="#06b6d4" fontSize="12" letterSpacing="1">ELEVASI PERMUKAAN AIR</text>
+        <g transform="translate(50, 20)">
 
-          {/* ── STRUKTUR UTAMA (Tiang & Girder) ── */}
-          {/* Tiang Pancang / Stilling Well */}
-          <rect x="230" y="100" width="40" height="480" fill="url(#metalGrad)" stroke="#64748b" strokeWidth="1" />
-          <rect x="220" y="580" width="60" height="20" fill="#334155" stroke="#475569" strokeWidth="1.5" />
-          
-          {/* Lengan Penahan (Girder Atas) */}
-          <rect x="90" y="120" width="280" height="25" fill="url(#metalGrad)" stroke="#64748b" strokeWidth="1" />
-          {/* Baut penyambung girder */}
-          <circle cx="250" cy="132.5" r="4" fill="#0f172a" stroke="#64748b" strokeWidth="1" />
-          <circle cx="235" cy="132.5" r="3" fill="#0f172a" />
-          <circle cx="265" cy="132.5" r="3" fill="#0f172a" />
+          {/* ── DASAR SUNGAI ── */}
+          <path d="M 0 550 Q 125 535 250 550 T 500 550 L 500 600 L 0 600 Z" fill="#0f172a" stroke="#1e293b" strokeWidth="2" />
 
-          {/* Jalur Kabel (Conduit) */}
-          <path d="M 235 145 L 235 480" stroke="#06b6d4" strokeWidth="2" fill="none" opacity="0.6" />
-          <path d="M 320 145 L 320 220 L 260 220 L 260 250" stroke="#8b5cf6" strokeWidth="2" fill="none" opacity="0.6" />
+          {/* ── BADAN AIR (tinggi dinamis berdasar TMA) ── */}
+          <rect x="0" y={waterY} width="500" height={550 - waterY} fill="url(#waterBodyGrad)" />
 
-          {/* ── SENSOR 1: A02YYUW ULTRASONIC (Kanan) ── */}
-          <g transform="translate(305, 145)">
-            <rect x="0" y="0" width="30" height="25" fill="#1e293b" stroke="#8b5cf6" strokeWidth="1.5" />
-            <rect x="5" y="25" width="20" height="10" fill="#0f172a" stroke="#8b5cf6" strokeWidth="1" />
-            {/* Gelombang Pancar */}
-            <path 
-              d="M 5 35 L -20 350 L 50 350 L 25 35 Z" 
-              fill="url(#beamGrad)" 
-              className={beamPulse ? "opacity-100 transition-opacity duration-300" : "opacity-30 transition-opacity duration-300"} 
+          {/* Gelombang permukaan air animatif */}
+          <path
+            d={`M 0 ${waterY} Q 60 ${waterY - 4 + (tick % 2) * 8} 125 ${waterY} T 250 ${waterY} T 375 ${waterY} T 500 ${waterY}`}
+            fill="none" stroke="#06b6d4" strokeWidth="1.5" opacity="0.8"
+          />
+          <path
+            d={`M 0 ${waterY + 3} Q 80 ${waterY + 7 - (tick % 2) * 6} 160 ${waterY + 3} T 320 ${waterY + 3} T 500 ${waterY + 3}`}
+            fill="none" stroke="#06b6d4" strokeWidth="0.8" opacity="0.4"
+          />
+
+          {/* Partikel air mengalir */}
+          {particles.map((p, i) => (
+            <circle key={i} cx={p.x} cy={Math.min(p.y, 545)} r={p.r} fill="#06b6d4" opacity={0.15 + (i % 3) * 0.08}>
+              <animate attributeName="opacity" values={`${0.1 + (i%3)*0.06};${0.25 + (i%3)*0.08};${0.1 + (i%3)*0.06}`} dur="2s" repeatCount="indefinite" />
+            </circle>
+          ))}
+
+          {/* Label Elevasi Permukaan */}
+          <text x="15" y={waterY - 8} fill="#06b6d4" fontSize="9" letterSpacing="1.5" fontWeight="bold">ELEVASI PERMUKAAN AIR</text>
+
+          {/* ── STRUKTUR UTAMA ── */}
+          {/* Tiang Pancang */}
+          <rect x="230" y="80" width="40" height="500" fill="url(#metalGrad)" stroke="#64748b" strokeWidth="1" />
+          <rect x="220" y="575" width="60" height="20" fill="#334155" stroke="#475569" strokeWidth="1.5" />
+
+          {/* Girder Atas */}
+          <rect x="80" y="100" width="300" height="22" fill="url(#metalGrad)" stroke="#64748b" strokeWidth="1" />
+          <circle cx="250" cy="111" r="3.5" fill="#0f172a" stroke="#64748b" strokeWidth="1" />
+          <circle cx="235" cy="111" r="2.5" fill="#0f172a" />
+          <circle cx="265" cy="111" r="2.5" fill="#0f172a" />
+
+          {/* Jalur Kabel */}
+          <path d="M 235 122 L 235 470" stroke="#14b8a6" strokeWidth="1.5" fill="none" opacity="0.5" strokeDasharray="4 3" />
+          <path d="M 320 122 L 320 200 L 260 200 L 260 235" stroke="#8b5cf6" strokeWidth="1.5" fill="none" opacity="0.5" strokeDasharray="4 3" />
+
+          {/* ── SENSOR 1: A02YYUW ULTRASONIC ── */}
+          <g transform="translate(305, 122)">
+            <rect x="0" y="0" width="28" height="22" fill="#1e293b" stroke="#8b5cf6" strokeWidth="1.5" rx="2" />
+            <rect x="4" y="22" width="20" height="8" fill="#0f172a" stroke="#8b5cf6" strokeWidth="1" rx="1" />
+            {/* Beam */}
+            <path
+              d={`M 4 30 L ${-15} ${waterY - 122} L ${43} ${waterY - 122} L 24 30 Z`}
+              fill="url(#beamGrad)"
+              opacity={beamPulse ? 0.7 : 0.15}
+              style={{ transition: 'opacity 0.4s ease' }}
+            />
+            {/* Pulse rings */}
+            <circle cx="14" cy="30" r={beamPulse ? 18 : 8} fill="none" stroke="#8b5cf6"
+              strokeWidth="0.8" opacity={beamPulse ? 0.6 : 0}
+              style={{ transition: 'all 0.5s ease' }}
             />
           </g>
 
-          {/* ── SENSOR 2: QDY30A HYDROSTATIC (Bawah Kiri) ── */}
-          <g transform="translate(210, 480)">
-            <rect x="0" y="0" width="20" height="60" fill="#1e293b" stroke="#14b8a6" strokeWidth="1.5" />
-            {/* Filter Diafragma */}
-            <path d="M 2 60 L 18 60 L 15 70 L 5 70 Z" fill="#0f172a" stroke="#14b8a6" strokeWidth="1" />
-            <line x1="10" y1="-300" x2="10" y2="0" stroke="#14b8a6" strokeWidth="2" />
+          {/* ── SENSOR 2: QDY30A HYDROSTATIC ── */}
+          <g transform="translate(210, 470)">
+            <rect x="0" y="0" width="18" height="55" fill="#1e293b" stroke="#14b8a6" strokeWidth="1.5" rx="2" />
+            <path d="M 1 55 L 17 55 L 14 65 L 4 65 Z" fill="#0f172a" stroke="#14b8a6" strokeWidth="1" />
+            <line x1="9" y1="-280" x2="9" y2="0" stroke="#14b8a6" strokeWidth="1.5" opacity="0.4" />
+            {/* Glow ketika terendam */}
+            {d.tmaHydrostatic > 0 && (
+              <circle cx="9" cy="35" r="6" fill="#14b8a6" opacity="0.3">
+                <animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.2;0.5;0.2" dur="2s" repeatCount="indefinite" />
+              </circle>
+            )}
           </g>
 
-          {/* ── SENSOR 3: OMBROMETER (Kiri Atas) ── */}
-          <g transform="translate(100, 75)">
-            <path d="M 0 0 L 40 0 L 35 45 L 5 45 Z" fill="#1e293b" stroke="#0ea5e9" strokeWidth="1.5" />
-            <rect x="15" y="45" width="10" height="15" fill="#334155" />
-            {/* Tipping Bucket Mekanisme */}
-            <circle cx="20" cy="25" r="4" fill="#0f172a" stroke="#0ea5e9" />
+          {/* ── SENSOR 3: OMBROMETER ── */}
+          <g transform="translate(90, 55)">
+            <path d="M 0 0 L 38 0 L 33 42 L 5 42 Z" fill="#1e293b" stroke="#0ea5e9" strokeWidth="1.5" />
+            <rect x="14" y="42" width="10" height="13" fill="#334155" />
+            <circle cx="19" cy="22" r="3.5" fill="#0f172a" stroke="#0ea5e9" />
+            {/* Tetesan hujan animatif */}
+            {d.rainRate > 0 && (
+              <>
+                <line x1="8" y1={-10 - (tick % 3) * 4} x2="8" y2={-5 - (tick % 3) * 4} stroke="#38bdf8" strokeWidth="1.5" opacity="0.7" />
+                <line x1="19" y1={-14 - ((tick + 1) % 3) * 4} x2="19" y2={-9 - ((tick + 1) % 3) * 4} stroke="#38bdf8" strokeWidth="1.5" opacity="0.5" />
+                <line x1="30" y1={-8 - ((tick + 2) % 3) * 4} x2="30" y2={-3 - ((tick + 2) % 3) * 4} stroke="#38bdf8" strokeWidth="1.5" opacity="0.6" />
+              </>
+            )}
           </g>
 
-          {/* ── PANEL KONTROL / BOX ESP32 (Tengah) ── */}
-          <g transform="translate(215, 250)">
-            <rect x="0" y="0" width="70" height="90" fill="#020617" stroke="#3b82f6" strokeWidth="2" />
+          {/* ── PANEL KONTROL ESP32 ── */}
+          <g transform="translate(215, 235)">
+            <rect x="0" y="0" width="70" height="85" fill="#020617" stroke="#3b82f6" strokeWidth="2" rx="3" />
             {/* Antena LoRa */}
-            <line x1="70" y1="10" x2="90" y2="-20" stroke="#3b82f6" strokeWidth="3" />
-            <circle cx="90" cy="-20" r="3" fill="#60a5fa" className="animate-ping" />
-            {/* Lampu Indikator Box */}
-            <circle cx="15" cy="15" r="4" fill="#10b981" className="animate-pulse" />
-            <circle cx="30" cy="15" r="4" fill="#ef4444" />
-            <rect x="10" y="30" width="50" height="40" fill="#1e293b" />
-            <text x="15" y="55" fill="#60a5fa" fontSize="9">NODE-01</text>
+            <line x1="70" y1="8" x2="88" y2="-18" stroke="#3b82f6" strokeWidth="2.5" />
+            <circle cx="88" cy="-18" r="3" fill="#60a5fa" opacity={beamPulse ? 1 : 0.3} style={{ transition: 'opacity 0.4s' }} />
+            {/* LED Status */}
+            <circle cx="14" cy="14" r="3.5" fill={ewsColor}>
+              <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="28" cy="14" r="3.5" fill={d.batteryVoltage < 11.5 ? '#ef4444' : '#10b981'} />
+            <rect x="8" y="28" width="54" height="44" fill="#0f172a" rx="2" />
+            <text x="13" y="44" fill="#60a5fa" fontSize="8" fontWeight="bold">WGG-01</text>
+            <text x="13" y="56" fill="#94a3b8" fontSize="7">ESP32-S3</text>
+            <text x="13" y="66" fill={ewsColor} fontSize="7" fontWeight="bold">{d.ewsStatus}</text>
           </g>
 
-          {/* ── GARIS UKUR & ANOTASI HUD (DIMENSIONAL LINES) ── */}
-          <g className="text-slate-400" fontSize="10">
-            {/* Garis Ukur Tinggi Total */}
-            <line x1="450" y1="120" x2="450" y2="550" stroke="#475569" strokeWidth="1" />
-            <path d="M 445 120 L 455 120 M 445 550 L 455 550" stroke="#475569" strokeWidth="1" />
-            <text x="460" y="340" fill="#94a3b8" transform="rotate(-90 460 340)" letterSpacing="2">ELEVASI MAKS: 5.0m</text>
+          {/* ═══ LIVE DATA BADGES ═══ */}
 
-            {/* Label QDY30A */}
-            <polyline points="190,520 140,520 110,490" fill="none" stroke="#14b8a6" strokeWidth="1" />
-            <rect x="15" y="465" width="105" height="40" fill="#020617" stroke="#14b8a6" strokeWidth="1" />
-            <text x="25" y="482" fill="#2dd4bf" fontSize="11" fontWeight="bold">QDY30A</text>
-            <text x="25" y="497" fill="#94a3b8" fontSize="9">SUBMERGED</text>
-
-            {/* Label A02YYUW */}
-            <polyline points="350,160 400,160 420,130" fill="none" stroke="#8b5cf6" strokeWidth="1" />
-            <rect x="410" y="95" width="115" height="40" fill="#020617" stroke="#8b5cf6" strokeWidth="1" />
-            <text x="420" y="112" fill="#a78bfa" fontSize="11" fontWeight="bold">A02YYUW</text>
-            <text x="420" y="127" fill="#94a3b8" fontSize="9">ULTRASONIC</text>
-
-            {/* Label Ombrometer */}
-            <polyline points="75,90 40,90 20,110" fill="none" stroke="#0ea5e9" strokeWidth="1" />
-            <rect x="5" y="115" width="120" height="40" fill="#020617" stroke="#0ea5e9" strokeWidth="1" />
-            <text x="15" y="132" fill="#38bdf8" fontSize="11" fontWeight="bold">OMBROMETER</text>
-            <text x="15" y="147" fill="#94a3b8" fontSize="9">TIPPING BUCKET</text>
-
-            {/* Label Panel Box */}
-            <polyline points="295,300 350,300 370,320" fill="none" stroke="#3b82f6" strokeWidth="1" />
-            <rect x="365" y="325" width="135" height="40" fill="#020617" stroke="#3b82f6" strokeWidth="1" />
-            <text x="375" y="342" fill="#60a5fa" fontSize="11" fontWeight="bold">ESP32 TX PANEL</text>
-            <text x="375" y="357" fill="#94a3b8" fontSize="9">LORA 921.4 MHz</text>
+          {/* Badge: TMA Ultrasonik */}
+          <g filter="url(#glow)">
+            <rect x="395" y="75" width="110" height="52" fill="#020617" stroke="#8b5cf6" strokeWidth="1.2" rx="6" opacity="0.95" />
+            <text x="405" y="92" fill="#a78bfa" fontSize="8" fontWeight="bold" letterSpacing="1">A02YYUW</text>
+            <text x="405" y="108" fill="#c4b5fd" fontSize="7">ULTRASONIK</text>
+            <text x="405" y="122" fill="#e9d5ff" fontSize="14" fontWeight="bold" fontFamily="monospace">
+              {d.tmaUltrasonic.toFixed(2)}
+              <tspan fill="#94a3b8" fontSize="8"> m</tspan>
+            </text>
+            <line x1="395" y1="101" x2="350" y2="135" stroke="#8b5cf6" strokeWidth="0.8" opacity="0.6" />
           </g>
 
-          {/* ── CROSSHAIRS / DEKORASI SUDUT ── */}
-          <path d="M 0 20 L 0 0 L 20 0" fill="none" stroke="#06b6d4" strokeWidth="2" opacity="0.7" />
-          <path d="M 500 20 L 500 0 L 480 0" fill="none" stroke="#06b6d4" strokeWidth="2" opacity="0.7" />
-          <path d="M 0 580 L 0 600 L 20 600" fill="none" stroke="#06b6d4" strokeWidth="2" opacity="0.7" />
-          <path d="M 500 580 L 500 600 L 480 600" fill="none" stroke="#06b6d4" strokeWidth="2" opacity="0.7" />
-          
+          {/* Badge: TMA Hidrostatik */}
+          <g filter="url(#glow)">
+            <rect x="10" y="385" width="115" height="52" fill="#020617" stroke="#14b8a6" strokeWidth="1.2" rx="6" opacity="0.95" />
+            <text x="20" y="402" fill="#2dd4bf" fontSize="8" fontWeight="bold" letterSpacing="1">QDY30A</text>
+            <text x="20" y="414" fill="#5eead4" fontSize="7">HIDROSTATIK</text>
+            <text x="20" y="432" fill="#a7f3d0" fontSize="14" fontWeight="bold" fontFamily="monospace">
+              {d.tmaHydrostatic.toFixed(3)}
+              <tspan fill="#94a3b8" fontSize="8"> m</tspan>
+            </text>
+            <line x1="125" y1="411" x2="210" y2="490" stroke="#14b8a6" strokeWidth="0.8" opacity="0.6" />
+          </g>
+
+          {/* Badge: Curah Hujan */}
+          <g filter="url(#glow)">
+            <rect x="10" y="100" width="68" height="48" fill="#020617" stroke="#0ea5e9" strokeWidth="1.2" rx="6" opacity="0.95" />
+            <text x="17" y="116" fill="#38bdf8" fontSize="7.5" fontWeight="bold">HUJAN</text>
+            <text x="17" y="139" fill="#bae6fd" fontSize="13" fontWeight="bold" fontFamily="monospace">
+              {d.rainRate.toFixed(1)}
+              <tspan fill="#94a3b8" fontSize="7"> mm</tspan>
+            </text>
+            <line x1="78" y1="124" x2="90" y2="85" stroke="#0ea5e9" strokeWidth="0.8" opacity="0.6" />
+          </g>
+
+          {/* Badge: Flow & Debit */}
+          <g filter="url(#glow)">
+            <rect x="370" y="290" width="125" height="62" fill="#020617" stroke="#3b82f6" strokeWidth="1.2" rx="6" opacity="0.95" />
+            <text x="380" y="306" fill="#60a5fa" fontSize="8" fontWeight="bold" letterSpacing="1">ESP32 TX</text>
+            <text x="380" y="320" fill="#94a3b8" fontSize="7">Debit</text>
+            <text x="418" y="320" fill="#93c5fd" fontSize="10" fontWeight="bold" fontFamily="monospace">
+              {d.discharge.toFixed(2)}
+              <tspan fill="#64748b" fontSize="7"> m³/s</tspan>
+            </text>
+            <text x="380" y="335" fill="#94a3b8" fontSize="7">Arus</text>
+            <text x="418" y="335" fill="#93c5fd" fontSize="10" fontWeight="bold" fontFamily="monospace">
+              {d.velocity.toFixed(2)}
+              <tspan fill="#64748b" fontSize="7"> m/s</tspan>
+            </text>
+            <text x="380" y="348" fill="#94a3b8" fontSize="7">Batt</text>
+            <text x="418" y="348" fill={d.batteryVoltage < 11.5 ? '#fca5a5' : '#86efac'} fontSize="10" fontWeight="bold" fontFamily="monospace">
+              {d.batteryVoltage.toFixed(1)}
+              <tspan fill="#64748b" fontSize="7"> V</tspan>
+            </text>
+            <line x1="370" y1="310" x2="293" y2="280" stroke="#3b82f6" strokeWidth="0.8" opacity="0.6" />
+          </g>
+
+          {/* ── GARIS UKUR ELEVASI ── */}
+          <line x1="520" y1="100" x2="520" y2="550" stroke="#334155" strokeWidth="0.8" />
+          <path d="M 516 100 L 524 100 M 516 550 L 524 550" stroke="#334155" strokeWidth="0.8" />
+          <text x="528" y="330" fill="#64748b" fontSize="8" transform="rotate(-90 528 330)" letterSpacing="2">MAX 5.0m</text>
+
+          {/* Garis TMA aktual */}
+          <line x1="0" y1={waterY} x2="520" y2={waterY} stroke={ewsColor} strokeWidth="1" strokeDasharray="6 3" opacity="0.7" />
+          <rect x="435" y={waterY - 10} width="80" height="18" fill="#020617" stroke={ewsColor} strokeWidth="1" rx="3" opacity="0.9" />
+          <text x="445" y={waterY + 3} fill={ewsColor} fontSize="9" fontWeight="bold" fontFamily="monospace">
+            TMA {d.tmaHydrostatic.toFixed(2)}m
+          </text>
+
+          {/* ── AMBANG BATAS EWS ── */}
+          {/* AWAS 3.50m */}
+          <line x1="0" y1={550 - (3.5/5)*250} x2="500" y2={550 - (3.5/5)*250} stroke="#ef4444" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.5" />
+          <text x="5" y={550 - (3.5/5)*250 - 3} fill="#ef4444" fontSize="7" opacity="0.7">AWAS 3.5m</text>
+
+          {/* SIAGA 2.80m */}
+          <line x1="0" y1={550 - (2.8/5)*250} x2="500" y2={550 - (2.8/5)*250} stroke="#f97316" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.5" />
+          <text x="5" y={550 - (2.8/5)*250 - 3} fill="#f97316" fontSize="7" opacity="0.7">SIAGA 2.8m</text>
+
+          {/* WASPADA 2.00m */}
+          <line x1="0" y1={550 - (2.0/5)*250} x2="500" y2={550 - (2.0/5)*250} stroke="#eab308" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.5" />
+          <text x="5" y={550 - (2.0/5)*250 - 3} fill="#eab308" fontSize="7" opacity="0.7">WASPADA 2.0m</text>
+
+          {/* ── CROSSHAIRS SUDUT ── */}
+          <path d="M 0 18 L 0 0 L 18 0" fill="none" stroke="#06b6d4" strokeWidth="1.5" opacity="0.5" />
+          <path d="M 540 18 L 540 0 L 522 0" fill="none" stroke="#06b6d4" strokeWidth="1.5" opacity="0.5" />
+          <path d="M 0 582 L 0 600 L 18 600" fill="none" stroke="#06b6d4" strokeWidth="1.5" opacity="0.5" />
+          <path d="M 540 582 L 540 600 L 522 600" fill="none" stroke="#06b6d4" strokeWidth="1.5" opacity="0.5" />
+
         </g>
       </svg>
     </div>
