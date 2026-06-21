@@ -7,85 +7,61 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
-// 1. FORCE DYNAMIC: Sangat krusial! Mencegah Next.js meng-cache route ini. 
-// Data telemetri IoT harus selalu real-time.
 export const dynamic = 'force-dynamic';
 
-// 2. SKEMA VALIDASI ZOD (Disesuaikan dengan Postgres Enum)
+// SKEMA VALIDASI ZOD (Wide Table sesuai payload ESP32)
 const telemetrySchema = z.object({
-  nodeId: z.string().min(1, 'nodeId tidak boleh kosong'),
-  parameter: z.string().min(1, 'parameter tidak boleh kosong'),
-  // Transformasi otomatis: Jika string "12.5", ubah ke float 12.5. Tolak jika NaN.
-  rawValue: z.union([z.string(), z.number()]).transform((val) => {
-    const parsed = typeof val === 'string' ? parseFloat(val) : val;
-    if (isNaN(parsed)) throw new Error('rawValue gagal di-parsing menjadi angka');
-    return parsed;
-  }),
-  unit: z.string().default('-'),
-  // MENGGUNAKAN ENUM: Harus persis sesuai dengan tipe WaterStatus di schema.prisma
-  status: z.enum(['AMAN', 'WASPADA', 'SIAGA', 'AWAS']).default('AMAN'),
+  nodeId: z.string().min(1).default('WGG-01'),
+  ewsStatus: z.enum(['AMAN', 'WASPADA', 'SIAGA', 'AWAS']).default('AMAN'),
+  tmaUltrasonic: z.number().optional(),
+  tmaHydrostatic: z.number().optional(),
+  curahHujan: z.number().optional(),
+  flowRate1: z.number().optional(),
+  flowRate2: z.number().optional(),
+  velocity: z.number().optional(),
+  discharge: z.number().optional(),
 });
 
 export async function POST(request: Request) {
   try {
-    // 3. SECURITY: Autentikasi Webhook (Opsional tapi WAJIB di Produksi)
     const authHeader = request.headers.get('authorization');
     if (process.env.WEBHOOK_SECRET && authHeader !== `Bearer ${process.env.WEBHOOK_SECRET}`) {
-      console.warn('[SECURITY WARNING] Akses Webhook Ditolak: Token Tidak Valid');
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
-
-    // 4. VALIDASI CEPAT: Gunakan safeParse agar server tidak crash jika data salah
     const validation = telemetrySchema.safeParse(body);
     
     if (!validation.success) {
       console.warn('[VALIDATION ERROR] Payload Ditolak:', validation.error.flatten().fieldErrors);
-      return NextResponse.json(
-        { success: false, error: validation.error.flatten().fieldErrors },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: validation.error.flatten().fieldErrors }, { status: 400 });
     }
 
     const validData = validation.data;
 
-    // 5. DATABASE INSERT DENGAN MAPPING KE WIDE TABLE PATTERN
-    const dataObj: any = {
-      nodeId: validData.nodeId,
-      ewsStatus: validData.status as any,
-    };
-
-    // Mapping parameter (misal: 'tmaUltrasonic') ke kolom tabel yang sesuai
-    const allowedParameters = ['tmaUltrasonic', 'tmaHydrostatic', 'curahHujan', 'flowRate1', 'flowRate2', 'velocity', 'discharge'];
-    if (allowedParameters.includes(validData.parameter)) {
-      dataObj[validData.parameter] = validData.rawValue;
-    }
-
+    // DATABASE INSERT (Langsung masukkan semua nilai Wide Table)
     const newLog = await prisma.telemetryLog.create({
-      data: dataObj,
-      // OPTIMASI NETWORK: Cukup kembalikan ID saja agar respons API sangat ringan.
-      select: {
-        id: true, 
-      }
+      data: {
+        nodeId: validData.nodeId,
+        ewsStatus: validData.ewsStatus as any,
+        tmaUltrasonic: validData.tmaUltrasonic,
+        tmaHydrostatic: validData.tmaHydrostatic,
+        curahHujan: validData.curahHujan,
+        flowRate1: validData.flowRate1,
+        flowRate2: validData.flowRate2,
+        velocity: validData.velocity,
+        discharge: validData.discharge,
+      },
+      select: { id: true }
     });
 
     return NextResponse.json({ success: true, insertedId: newLog.id }, { status: 201 });
 
   } catch (error: any) {
-    // 6. PROTEKSI FOREIGN KEY (P2003): Menangani kasus jika nodeId dari ESP32 belum terdaftar
     if (error.code === 'P2003') {
-      console.error('[DATABASE ERROR] nodeId tidak ditemukan di master StationNode. Payload ditolak.');
-      return NextResponse.json(
-        { success: false, error: 'Unregistered Station Node ID (Foreign Key Constraint)' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Unregistered Station Node ID' }, { status: 400 });
     }
-
-    console.error('[DATABASE CRITICAL ERROR] Gagal menyimpan telemetri:', error.message);
-    return NextResponse.json(
-      { success: false, error: 'Internal Server Error' },
-      { status: 500 }
-    );
+    console.error('[DATABASE CRITICAL ERROR]', error.message);
+    return NextResponse.json({ success: false, error: 'Internal Server Error' }, { status: 500 });
   }
 }
