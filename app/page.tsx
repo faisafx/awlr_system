@@ -237,15 +237,36 @@ function KpiCard({
   );
 }
 
-const WaterLevelWidget = ({ value, max, label, color, unit }: any) => {
+const WaterLevelWidget = ({ value, max, label, color, unit, variant = 'hydro' }: any) => {
   const percentage = Math.min((value / max) * 100, 100);
   return (
     <div className="card group" style={{ display: 'flex', gap: '16px', padding: '20px', background: 'var(--surface-card)', position: 'relative', overflow: 'hidden', alignItems: 'center' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: `linear-gradient(90deg, ${color}, transparent)`, opacity: 0.8, transition: 'opacity var(--duration-base)' }} className="group-hover:opacity-100" />
-      <div style={{ width: '32px', height: '80px', borderRadius: '16px', background: 'var(--surface-inset)', border: '1px solid var(--border-subtle)', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${percentage}%`, background: `linear-gradient(180deg, ${color}, ${color}40)`, transition: 'height 1s ease-out' }} />
-        <div style={{ position: 'absolute', bottom: `${percentage}%`, left: 0, right: 0, height: '2px', background: '#fff', opacity: 0.5 }} />
+      
+      {/* Visualizer Container */}
+      <div style={{ width: '32px', height: '80px', borderRadius: '16px', background: 'var(--surface-inset)', border: '1px solid var(--border-subtle)', position: 'relative', overflow: 'hidden', flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+        {variant === 'hydro' ? (
+          <>
+            {/* Air naik dari bawah */}
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${percentage}%`, background: `linear-gradient(180deg, ${color}, ${color}40)`, transition: 'height 1s ease-out' }} />
+            <div style={{ position: 'absolute', bottom: `${percentage}%`, left: 0, right: 0, height: '2px', background: '#fff', opacity: 0.8 }} />
+            <div className="animate-ping" style={{ position: 'absolute', bottom: `${percentage}%`, left: '30%', width: '4px', height: '4px', background: '#fff', borderRadius: '50%', opacity: 0.5, animationDuration: '2s' }} />
+          </>
+        ) : (
+          <>
+            {/* Ultrasonik: Laser turun dari atas */}
+            <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '2px', height: `${100 - percentage}%`, background: `linear-gradient(180deg, ${color}20, ${color})`, transition: 'height 1s ease-out' }} />
+            <div style={{ position: 'absolute', top: `${100 - percentage}%`, left: '10%', right: '10%', height: '3px', background: color, borderRadius: '2px', boxShadow: `0 0 8px ${color}` }} />
+            <div className="animate-pulse" style={{ position: 'absolute', top: `${100 - percentage}%`, left: '30%', right: '30%', height: '2px', background: '#fff' }} />
+            
+            {/* Ruler Ticks */}
+            <div style={{ position: 'absolute', right: '2px', top: '10%', bottom: '10%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              {[...Array(6)].map((_, i) => <div key={i} style={{ width: '4px', height: '1px', background: 'var(--border-strong)' }} />)}
+            </div>
+          </>
+        )}
       </div>
+
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginTop: '6px' }}>
@@ -259,15 +280,24 @@ const WaterLevelWidget = ({ value, max, label, color, unit }: any) => {
 };
 
 const WaveCard = ({ value, label, color, unit }: any) => {
+  // Speed of wave dynamically responds to value (faster flow = faster waves)
+  const animDur = value > 50 ? '2s' : value > 20 ? '4s' : '8s';
+  
   return (
     <div className="card group" style={{ display: 'flex', flexDirection: 'column', padding: '24px 20px', background: 'var(--surface-card)', position: 'relative', overflow: 'hidden', justifyContent: 'center' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: `linear-gradient(90deg, ${color}, transparent)`, opacity: 0.8, transition: 'opacity var(--duration-base)' }} className="group-hover:opacity-100" />
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, opacity: 0.15, transform: 'scaleY(1.5)', transformOrigin: 'bottom' }}>
-        <svg viewBox="0 0 100 25" preserveAspectRatio="none" style={{ width: '100%', height: '40px' }}>
-          <path d="M0,25 C20,15 30,5 50,15 C70,25 80,5 100,15 L100,25 Z" fill={color} />
-          <path d="M0,25 C30,10 40,20 60,10 C80,0 90,15 100,15 L100,25 Z" fill={color} opacity="0.5" />
+      
+      <div style={{ position: 'absolute', bottom: 0, left: 0, width: '200%', opacity: 0.15, transformOrigin: 'bottom' }}>
+        <style>{`
+          @keyframes wave-move { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+          @keyframes wave-move-rev { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+        `}</style>
+        <svg viewBox="0 0 200 25" preserveAspectRatio="none" style={{ width: '100%', height: '40px' }}>
+          <path d="M0,25 C20,15 30,5 50,15 C70,25 80,5 100,15 C120,25 130,5 150,15 C170,25 180,5 200,15 L200,25 Z" fill={color} style={{ animation: `wave-move ${animDur} linear infinite` }} />
+          <path d="M0,25 C30,10 40,20 60,10 C80,0 90,15 100,15 C130,10 140,20 160,10 C180,0 190,15 200,15 L200,25 Z" fill={color} opacity="0.5" style={{ animation: `wave-move-rev ${parseFloat(animDur)*1.3}s linear infinite` }} />
         </svg>
       </div>
+
       <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', position: 'relative', zIndex: 10 }}>{label}</span>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginTop: '12px', position: 'relative', zIndex: 10 }}>
         <span style={{ fontSize: '32px', fontWeight: 800, fontFamily: 'var(--font-jetbrains), monospace', color: 'var(--text-primary)', lineHeight: 1 }}>{value.toFixed(2)}</span>
@@ -291,7 +321,7 @@ const GaugeWidget = ({ value, max, label, color, unit }: any) => {
           <circle cx="35" cy="35" r={radius} stroke="var(--surface-inset)" strokeWidth="6" fill="none" />
           <circle cx="35" cy="35" r={radius} stroke={color} strokeWidth="6" strokeDasharray={circumference} strokeDashoffset={offset} style={{ transition: 'stroke-dashoffset 1s ease-out', filter: `drop-shadow(0 0 4px ${color}60)` }} fill="none" strokeLinecap="round" />
         </svg>
-        <Fan size={18} className={value > 0 ? 'animate-spin' : ''} style={{ position: 'absolute', top: '26px', color: color, opacity: 0.8, animationDuration: '3s' }} />
+        <Fan size={18} className={value > 0 ? 'animate-spin' : ''} style={{ position: 'absolute', top: '26px', color: color, opacity: 0.8, animationDuration: value > 30 ? '0.5s' : value > 10 ? '1s' : '3s' }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)' }}>{label}</span>
@@ -585,7 +615,7 @@ Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
   );
 }
 
-// â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Main Page ──────────────────────────────────────────────────────────────────────
 
 export default function CommandCenter() {
   const [data, setData] = useState<TelemetryState>({
@@ -663,7 +693,7 @@ export default function CommandCenter() {
     return () => { clientRef.current?.end(); };
   }, []);
 
-  // â”€â”€ WHATSAPP INTEGRATION â”€â”€
+  // ── WHATSAPP INTEGRATION ──
   const dataRef = useRef(data);
   const lastEwsRef = useRef(data.ewsStatus);
 
@@ -678,7 +708,7 @@ export default function CommandCenter() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `ðŸš¨ *PERINGATAN DINI BANJIR: ${data.ewsStatus}* ðŸš¨\n\nLokasi: Pos WGG-01 Sungai Wanggu\nTinggi Air: ${data.tmaHydrostatic.toFixed(2)} m\nDebit: ${data.discharge.toFixed(2)} mÂ³/s\nCurah Hujan: ${data.rainRate.toFixed(1)} mm/jam\n\nâš ï¸ Harap warga di sekitar segera waspada dan mengambil tindakan pengamanan!`
+          message: `🚨 *PERINGATAN DINI BANJIR: ${data.ewsStatus}* 🚨\n\nLokasi: Pos WGG-01 Sungai Wanggu\nTinggi Air: ${data.tmaHydrostatic.toFixed(2)} m\nDebit: ${data.discharge.toFixed(2)} m³/s\nCurah Hujan: ${data.rainRate.toFixed(1)} mm/jam\n\n⚠️  Harap warga di sekitar segera waspada dan mengambil tindakan pengamanan!`
         })
       }).catch(err => console.error("Gagal kirim darurat WA", err));
     } else if (data.ewsStatus !== lastEwsRef.current) {
@@ -694,7 +724,7 @@ export default function CommandCenter() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `ðŸ“Š *UPDATE TELEMETRI TERAWANG*\nPos WGG-01 Sungai Wanggu\nðŸ•’ Waktu: ${new Date().toLocaleString('id-ID')}\n\nðŸŒŠ TMA: ${current.tmaHydrostatic.toFixed(2)} m\nðŸ’§ Debit: ${current.discharge.toFixed(2)} mÂ³/s\nðŸŒ§ï¸ Hujan: ${current.rainRate.toFixed(1)} mm/jam\nâ„¹ï¸ Status EWS: *${current.ewsStatus}*\n\n_Pesan otomatis dikirim setiap 30 menit dari Command Center._`
+          message: `📊 *UPDATE TELEMETRI TERAWANG*\nPos WGG-01 Sungai Wanggu\n🕒 Waktu: ${new Date().toLocaleString('id-ID')}\n\n🌊 TMA: ${current.tmaHydrostatic.toFixed(2)} m\n💧 Debit: ${current.discharge.toFixed(2)} m³/s\n🌦️  Hujan: ${current.rainRate.toFixed(1)} mm/jam\nℹ️  Status EWS: *${current.ewsStatus}*\n\n_Pesan otomatis dikirim setiap 30 menit dari Command Center._`
         })
       }).catch(err => console.error("Gagal kirim rutin WA", err));
     }, 30 * 60 * 1000); // 30 Menit = 1.800.000 ms
@@ -719,7 +749,7 @@ export default function CommandCenter() {
   return (
     <div className="flex flex-col gap-4 md:gap-5">
 
-      {/* â”€â”€ COMMAND BAR â”€â”€ */}
+      {/* ── COMMAND BAR ── */}
       <div className="card p-3 md:p-4 lg:px-5">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 md:gap-4">
 
@@ -742,7 +772,7 @@ export default function CommandCenter() {
               </div>
               <h1 className="text-lg md:text-[18px] font-bold text-[var(--text-primary)] tracking-[-0.02em] m-0">
                 TERAWANG{' '}
-                <span className="block md:inline text-[13px] md:text-[15px] mt-0.5 md:mt-0 font-normal text-[var(--text-muted)]">â€” Sistem Pemantauan Dini</span>
+                <span className="block md:inline text-[13px] md:text-[15px] mt-0.5 md:mt-0 font-normal text-[var(--text-muted)]">— Sistem Pemantauan Dini</span>
               </h1>
             </div>
           </div>
@@ -761,7 +791,7 @@ export default function CommandCenter() {
               }}
             >
               {connOk ? <Wifi size={11} /> : <WifiOff size={11} />}
-              {connOk ? 'EMQX Â· WSS Aktif' : connWait ? 'Menghubungkan...' : 'Terputus'}
+              {connOk ? 'EMQX · WSS Aktif' : connWait ? 'Menghubungkan...' : 'Terputus'}
             </div>
 
             <div

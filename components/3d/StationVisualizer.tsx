@@ -70,7 +70,7 @@ export default function StationVisualizer({ sensorData }: { sensorData?: SensorD
 
       {/* ── SVG BLUEPRINT ── */}
       <svg
-        viewBox="0 0 600 650"
+        viewBox="-10 -10 560 620"
         className="w-full h-full drop-shadow-[0_0_15px_rgba(6,182,212,0.1)] relative z-0"
         preserveAspectRatio="xMidYMid meet"
       >
