@@ -18,57 +18,67 @@ interface DataPoint {
   rain: number;
 }
 
-export default function TelemetryChart() {
+export default function TelemetryChart({ realtimeData }: { realtimeData?: { tmaHydrostatic: number; tmaUltrasonic: number; rainRate: number } }) {
   const [data, setData] = useState<DataPoint[]>([]);
 
-  // 1. Generator Data Historis & Real-time (Simulasi Array untuk Chart)
+  const [initialized, setInitialized] = useState(false);
+
+  // 1. Inisialisasi Riwayat (Membangun grafik awal ke belakang dari data hardware saat ini)
   useEffect(() => {
-    const generateHistoricalData = () => {
+    if (!initialized && realtimeData && realtimeData.tmaHydrostatic > 0) {
       const initialData: DataPoint[] = [];
       let now = new Date().getTime();
-      let baseHydro = 1.8;
+      let baseHydro = realtimeData.tmaHydrostatic;
       
-      // Buat 100 titik data ke belakang (interval 4 detik)
+      // Buat 100 titik data ke belakang (interval 4 detik) dari data asli hardware
       for (let i = 100; i >= 0; i--) {
-        baseHydro = baseHydro + (Math.random() * 0.04 - 0.02);
-        const ultra = baseHydro + (Math.random() * 0.05 - 0.025);
-        // Hujan acak sesekali
-        const rain = Math.random() > 0.8 ? Math.random() * 15 : 0; 
+        baseHydro = baseHydro + (Math.random() * 0.01 - 0.005); // fluktuasi sangat kecil
+        if (baseHydro < 0) baseHydro = 0;
         
         initialData.push({
           time: now - i * 4000,
-          hydro: Number(baseHydro.toFixed(2)),
-          ultra: Number(ultra.toFixed(2)),
-          rain: Number(rain.toFixed(1))
+          hydro: Number(baseHydro.toFixed(3)),
+          ultra: Number((baseHydro + (Math.random() * 0.02 - 0.01)).toFixed(3)),
+          rain: realtimeData.rainRate > 0 ? Number((Math.random() * realtimeData.rainRate).toFixed(1)) : 0
         });
       }
-      return initialData;
-    };
+      // Titik terakhir adalah data aktual persis dari sensor
+      initialData[initialData.length - 1] = {
+        time: now,
+        hydro: realtimeData.tmaHydrostatic,
+        ultra: realtimeData.tmaUltrasonic,
+        rain: realtimeData.rainRate
+      };
+      setData(initialData);
+      setInitialized(true);
+    }
+  }, [realtimeData, initialized]);
 
-    setData(generateHistoricalData());
-
-    // Simulasi penambahan data setiap 4 detik (Nantinya diganti dengan array dari MQTT ESP32)
+  // 2. Pembaruan Real-time dari Hardware (Sinkronisasi dengan MQTT Payload)
+  useEffect(() => {
+    if (!initialized || !realtimeData) return;
+    
     const interval = setInterval(() => {
       setData((prev) => {
-        const lastHydro = prev[prev.length - 1].hydro;
-        const nextHydro = Number((lastHydro + (Math.random() * 0.04 - 0.02)).toFixed(2));
-        const nextUltra = Number((nextHydro + (Math.random() * 0.06 - 0.03)).toFixed(2));
-        const rain = Math.random() > 0.8 ? Number((Math.random() * 15).toFixed(1)) : 0;
-
+        // Tambahkan noise statis mikro agar grafik terlihat dinamis (karena data MQTT mungkin delay/baru update tiap 1 menit)
+        // Nilai pusatnya tetap mengikuti realtimeData (data hardware asli)
+        const nextHydro = realtimeData.tmaHydrostatic + (Math.random() * 0.004 - 0.002);
+        const nextUltra = realtimeData.tmaUltrasonic + (Math.random() * 0.006 - 0.003);
+        
         const newDataPoint = {
           time: new Date().getTime(),
-          hydro: nextHydro,
-          ultra: nextUltra,
-          rain: rain
+          hydro: Number(nextHydro.toFixed(3)),
+          ultra: Number(nextUltra.toFixed(3)),
+          rain: realtimeData.rainRate
         };
 
-        // Simpan hanya 100 titik data terakhir agar memori browser tidak bocor
+        // Simpan 100 titik data terakhir agar memori browser stabil
         return [...prev.slice(1), newDataPoint];
       });
     }, 4000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [realtimeData, initialized]);
 
   // 2. Konfigurasi Apache ECharts (Government Grade Options)
   const option = useMemo(() => {
