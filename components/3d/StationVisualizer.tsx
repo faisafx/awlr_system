@@ -59,7 +59,7 @@ export default function StationVisualizer({ sensorData }: { sensorData?: SensorD
       });
     }
     return pts;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tick, waterY]);
 
   return (
@@ -69,8 +69,11 @@ export default function StationVisualizer({ sensorData }: { sensorData?: SensorD
       <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-20 z-10"></div>
 
       {/* ── SVG BLUEPRINT ── */}
+      {/* viewBox="min-x min-y width height" 
+          Untuk Zoom Out: Perbesar nilai width & height (contoh dari 600 650 jadi 640 700)
+          Untuk Geser: Ubah min-x (kiri/kanan) dan min-y (atas/bawah) */}
       <svg
-        viewBox="-10 -10 560 620"
+        viewBox="-50 60 700 800"
         className="w-full h-full drop-shadow-[0_0_15px_rgba(6,182,212,0.1)] relative z-0"
         preserveAspectRatio="xMidYMid meet"
       >
@@ -98,8 +101,8 @@ export default function StationVisualizer({ sensorData }: { sensorData?: SensorD
 
           {/* Glow filter untuk data value badges */}
           <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
 
           {/* Animasi gelombang permukaan air */}
@@ -132,7 +135,7 @@ export default function StationVisualizer({ sensorData }: { sensorData?: SensorD
           {/* Partikel air mengalir */}
           {particles.map((p, i) => (
             <circle key={i} cx={p.x} cy={Math.min(p.y, 545)} r={p.r} fill="#06b6d4" opacity={0.15 + (i % 3) * 0.08}>
-              <animate attributeName="opacity" values={`${0.1 + (i%3)*0.06};${0.25 + (i%3)*0.08};${0.1 + (i%3)*0.06}`} dur="2s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values={`${0.1 + (i % 3) * 0.06};${0.25 + (i % 3) * 0.08};${0.1 + (i % 3) * 0.06}`} dur="2s" repeatCount="indefinite" />
             </circle>
           ))}
 
@@ -291,16 +294,16 @@ export default function StationVisualizer({ sensorData }: { sensorData?: SensorD
 
           {/* ── AMBANG BATAS EWS ── */}
           {/* AWAS 3.50m */}
-          <line x1="0" y1={550 - (3.5/5)*250} x2="500" y2={550 - (3.5/5)*250} stroke="#ef4444" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.5" />
-          <text x="5" y={550 - (3.5/5)*250 - 3} fill="#ef4444" fontSize="7" opacity="0.7">AWAS 3.5m</text>
+          <line x1="0" y1={550 - (3.5 / 5) * 250} x2="500" y2={550 - (3.5 / 5) * 250} stroke="#ef4444" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.5" />
+          <text x="5" y={550 - (3.5 / 5) * 250 - 3} fill="#ef4444" fontSize="7" opacity="0.7">AWAS 3.5m</text>
 
           {/* SIAGA 2.80m */}
-          <line x1="0" y1={550 - (2.8/5)*250} x2="500" y2={550 - (2.8/5)*250} stroke="#f97316" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.5" />
-          <text x="5" y={550 - (2.8/5)*250 - 3} fill="#f97316" fontSize="7" opacity="0.7">SIAGA 2.8m</text>
+          <line x1="0" y1={550 - (2.8 / 5) * 250} x2="500" y2={550 - (2.8 / 5) * 250} stroke="#f97316" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.5" />
+          <text x="5" y={550 - (2.8 / 5) * 250 - 3} fill="#f97316" fontSize="7" opacity="0.7">SIAGA 2.8m</text>
 
           {/* WASPADA 2.00m */}
-          <line x1="0" y1={550 - (2.0/5)*250} x2="500" y2={550 - (2.0/5)*250} stroke="#eab308" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.5" />
-          <text x="5" y={550 - (2.0/5)*250 - 3} fill="#eab308" fontSize="7" opacity="0.7">WASPADA 2.0m</text>
+          <line x1="0" y1={550 - (2.0 / 5) * 250} x2="500" y2={550 - (2.0 / 5) * 250} stroke="#eab308" strokeWidth="0.8" strokeDasharray="3 3" opacity="0.5" />
+          <text x="5" y={550 - (2.0 / 5) * 250 - 3} fill="#eab308" fontSize="7" opacity="0.7">WASPADA 2.0m</text>
 
           {/* ── CROSSHAIRS SUDUT ── */}
           <path d="M 0 18 L 0 0 L 18 0" fill="none" stroke="#06b6d4" strokeWidth="1.5" opacity="0.5" />
