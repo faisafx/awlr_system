@@ -610,23 +610,28 @@ export default function CommandCenter() {
   const clientRef = useRef<MqttClient | null>(null);
 
   useEffect(() => {
+    const storedBroker = localStorage.getItem('mqtt_broker') || MQTT_BROKER;
+    const storedTopic = localStorage.getItem('mqtt_topic') || MQTT_TOPIC;
+    const storedUser = localStorage.getItem('mqtt_user') || 'faisal';
+    const storedPass = localStorage.getItem('mqtt_pass') || 'faisalwibu11';
+
     const clientId = `awlr-web-${Math.random().toString(16).substring(2, 8)}`;
-    clientRef.current = mqtt.connect(MQTT_BROKER, {
+    clientRef.current = mqtt.connect(storedBroker, {
       clientId,
-      username: 'faisal',
-      password: 'faisalwibu11',
+      username: storedUser,
+      password: storedPass,
       clean: true,
       connectTimeout: 5000,
       reconnectPeriod: 2000,
     });
 
-    clientRef.current.on('connect', () => { setConnectionStatus('CONNECTED'); clientRef.current?.subscribe(MQTT_TOPIC, { qos: 0 }); });
+    clientRef.current.on('connect', () => { setConnectionStatus('CONNECTED'); clientRef.current?.subscribe(storedTopic, { qos: 0 }); });
     clientRef.current.on('reconnect', () => setConnectionStatus('CONNECTING'));
     clientRef.current.on('error', () => setConnectionStatus('ERROR'));
     clientRef.current.on('offline', () => setConnectionStatus('DISCONNECTED'));
 
     clientRef.current.on('message', (topic, message) => {
-      if (topic !== MQTT_TOPIC) return;
+      if (topic !== storedTopic) return;
       try {
         const payload = JSON.parse(message.toString());
         setData(prev => {

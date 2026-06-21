@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Settings, Save, Sliders, Radio, Globe, ShieldAlert, 
   Database, RefreshCw, Lock, TerminalSquare, ShieldCheck
@@ -20,10 +20,22 @@ export default function GlobalSettingsPage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // ── 1. STATE CONFIG PIPELINE MQTT EMQX ──
-  const [mqttHost, setMqttHost] = useState<string>('wss://broker.emqx.io');
-  const [mqttPort, setMqttPort] = useState<number>(8084);
-  const [mqttTopic, setMqttTopic] = useState<string>('bbws/wanggu/node01/telemetry');
-  const [mqttUser, setMqttUser] = useState<string>('bws_sulawesi_iv');
+  const [mqttHost, setMqttHost] = useState<string>('wss://f06e9090.ala.asia-southeast1.emqxsl.com:8084/mqtt');
+  const [mqttTopic, setMqttTopic] = useState<string>('awlr/wanggu/sensor');
+  const [mqttUser, setMqttUser] = useState<string>('faisal');
+  const [mqttPass, setMqttPass] = useState<string>('faisalwibu11');
+
+  useEffect(() => {
+    const savedBroker = localStorage.getItem('mqtt_broker');
+    const savedTopic = localStorage.getItem('mqtt_topic');
+    const savedUser = localStorage.getItem('mqtt_user');
+    const savedPass = localStorage.getItem('mqtt_pass');
+    
+    if (savedBroker) setMqttHost(savedBroker);
+    if (savedTopic) setMqttTopic(savedTopic);
+    if (savedUser) setMqttUser(savedUser);
+    if (savedPass) setMqttPass(savedPass);
+  }, []);
 
   // ── 2. STATE CONFIG METADATA ANCHOR GEODETIK ──
   const [stationName, setStationName] = useState<string>('Node 01 - Sungai Wanggu');
@@ -42,11 +54,18 @@ export default function GlobalSettingsPage() {
 
   const handleSaveConfiguration = () => {
     setIsSaving(true);
-    // Simulasi penulisan balik ke konfigurasi environment atau database local
+    
+    if (activeSection === 'MQTT') {
+      localStorage.setItem('mqtt_broker', mqttHost);
+      localStorage.setItem('mqtt_topic', mqttTopic);
+      localStorage.setItem('mqtt_user', mqttUser);
+      localStorage.setItem('mqtt_pass', mqttPass);
+    }
+
     setTimeout(() => {
       setIsSaving(false);
-      alert('Konfigurasi sistem global berhasil diperbarui dan dikunci.');
-    }, 1500);
+      alert('Konfigurasi MQTT berhasil diperbarui. Perubahan akan berlaku ketika memuat ulang Dashboard (Halaman Utama).');
+    }, 800);
   };
 
   return (
@@ -126,8 +145,9 @@ export default function GlobalSettingsPage() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <SettingsInput label="Broker URL Host (WebSockets)" value={mqttHost} onChange={setMqttHost} type="text" />
-                  <SettingsInput label="WSS Secure Port" value={mqttPort} onChange={(v) => setMqttPort(Number(v))} type="number" />
+                  <div className="md:col-span-2">
+                    <SettingsInput label="Broker URL Host (WebSockets)" value={mqttHost} onChange={setMqttHost} type="text" />
+                  </div>
                   <div className="md:col-span-2">
                     <SettingsInput label="Master Ingress Telemetry Topic" value={mqttTopic} onChange={setMqttTopic} type="text" isHighlight />
                   </div>
@@ -136,8 +156,12 @@ export default function GlobalSettingsPage() {
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">Gateway Client Password</label>
                     <div className="relative">
-                      <input type="password" value="••••••••••••" disabled className="w-full bg-[var(--surface-inset)] border border-[var(--border-subtle)] rounded-lg px-4 py-2.5 text-[13px] text-[var(--text-disabled)] font-[family-name:var(--font-jetbrains)] focus:outline-none cursor-not-allowed select-none" />
-                      <Lock size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-disabled)]" />
+                      <input 
+                        type="password" 
+                        value={mqttPass} 
+                        onChange={(e) => setMqttPass(e.target.value)} 
+                        className="w-full bg-[var(--surface-card)] border border-[var(--border-subtle)] rounded-lg px-4 py-2.5 text-[13px] text-[var(--text-primary)] font-[family-name:var(--font-jetbrains)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)]" 
+                      />
                     </div>
                   </div>
                 </div>
