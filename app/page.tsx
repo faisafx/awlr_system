@@ -639,6 +639,18 @@ export default function CommandCenter() {
   const [connectionStatus, setConnectionStatus] = useState<'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'ERROR'>('CONNECTING');
   const clientRef = useRef<MqttClient | null>(null);
 
+  // Mencegah reset UI dengan meload cache terakhir dari localStorage saat komponen di-mount
+  useEffect(() => {
+    try {
+      const cachedData = localStorage.getItem('awlr_last_payload');
+      const cachedTime = localStorage.getItem('awlr_last_time');
+      if (cachedData) setData(JSON.parse(cachedData));
+      if (cachedTime) setLastUpdated(cachedTime);
+    } catch (e) {
+      console.error('Failed to load cached telemetry', e);
+    }
+  }, []);
+
   useEffect(() => {
     const storedBroker = localStorage.getItem('mqtt_broker') || MQTT_BROKER;
     const storedTopic = localStorage.getItem('mqtt_topic') || MQTT_TOPIC;
@@ -682,9 +694,16 @@ export default function CommandCenter() {
           if (payload.relay2Alarm !== undefined) next.relay2Alarm = Boolean(payload.relay2Alarm);
 
           next.deviation = Number(Math.abs(next.tmaHydrostatic - next.tmaUltrasonic).toFixed(2));
+          
+          // Simpan payload terakhir ke localStorage agar tidak ter-reset saat pindah halaman
+          localStorage.setItem('awlr_last_payload', JSON.stringify(next));
+          
           return next;
         });
-        setLastUpdated(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        
+        const nowStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        setLastUpdated(nowStr);
+        localStorage.setItem('awlr_last_time', nowStr);
       } catch (e) {
         console.error('Gagal parsing JSON dari ESP32:', e);
       }
