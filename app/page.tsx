@@ -636,6 +636,7 @@ export default function CommandCenter() {
   });
 
   const [lastUpdated, setLastUpdated] = useState<string>('Menunggu data...');
+  const [realTime, setRealTime] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'ERROR'>('CONNECTING');
   const clientRef = useRef<MqttClient | null>(null);
 
@@ -649,6 +650,12 @@ export default function CommandCenter() {
     } catch (e) {
       console.error('Failed to load cached telemetry', e);
     }
+
+    // Real-time ticking clock
+    const timer = setInterval(() => {
+      setRealTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -667,15 +674,32 @@ export default function CommandCenter() {
       reconnectPeriod: 2000,
     });
 
-    clientRef.current.on('connect', () => { setConnectionStatus('CONNECTED'); clientRef.current?.subscribe(storedTopic, { qos: 0 }); });
+    clientRef.current.on('connect', () => { 
+      setConnectionStatus('CONNECTED'); 
+      clientRef.current?.subscribe(storedTopic, { qos: 0 }); 
+      clientRef.current?.subscribe('awlr/wanggu/control', { qos: 0 }); 
+    });
     clientRef.current.on('reconnect', () => setConnectionStatus('CONNECTING'));
     clientRef.current.on('error', () => setConnectionStatus('ERROR'));
     clientRef.current.on('offline', () => setConnectionStatus('DISCONNECTED'));
 
     clientRef.current.on('message', (topic, message) => {
-      if (topic !== storedTopic) return;
       try {
         const payload = JSON.parse(message.toString());
+        
+        // Responsif untuk KPI Relay (Instan via topik control)
+        if (topic === 'awlr/wanggu/control') {
+          setData(prev => {
+            const next = { ...prev };
+            if (payload.relay1Siren !== undefined) next.relay1Siren = Boolean(payload.relay1Siren);
+            if (payload.relay2Alarm !== undefined) next.relay2Alarm = Boolean(payload.relay2Alarm);
+            return next;
+          });
+          return;
+        }
+
+        if (topic !== storedTopic) return;
+
         setData(prev => {
           const next = { ...prev };
 
@@ -822,7 +846,7 @@ export default function CommandCenter() {
               }}
             >
               <Clock size={10} />
-              {lastUpdated}
+              {realTime || lastUpdated}
             </div>
 
             <div
