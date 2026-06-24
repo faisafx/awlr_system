@@ -349,47 +349,47 @@ export default function GlobalSettingsPage() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {/* Kartu Relay 1 (Sirene) */}
-                  <div className="rounded-xl p-5 flex flex-col items-center gap-4 border-2 transition-all duration-300 relative overflow-hidden" style={{ borderColor: relay1Siren ? '#EF4444' : 'var(--border-subtle)', background: relay1Siren ? '#FEF2F2' : 'var(--surface-card)' }}>
-                    {relay1Siren && <div className="absolute inset-0 bg-[#EF4444] opacity-5 animate-pulse" />}
+                  {/* Kartu Relay 1 (Lampu) */}
+                  <div className="rounded-xl p-5 flex flex-col items-center gap-4 border-2 transition-all duration-300 relative overflow-hidden" style={{ borderColor: relay1Siren ? '#F59E0B' : 'var(--border-subtle)', background: relay1Siren ? '#FFFBEB' : 'var(--surface-card)' }}>
+                    {relay1Siren && <div className="absolute inset-0 bg-[#F59E0B] opacity-5 animate-pulse" />}
                     
-                    <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-inner relative z-10 transition-all duration-300" style={{ background: relay1Siren ? '#FEE2E2' : 'var(--surface-inset)', boxShadow: relay1Siren ? '0 0 30px rgba(239, 68, 68, 0.4)' : 'none' }}>
-                      <Siren size={40} style={{ color: relay1Siren ? '#EF4444' : 'var(--text-disabled)', animation: relay1Siren ? 'pulse 0.8s infinite' : 'none', transition: 'color 0.3s' }} />
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-inner relative z-10 transition-all duration-300" style={{ background: relay1Siren ? '#FEF3C7' : 'var(--surface-inset)', boxShadow: relay1Siren ? '0 0 30px rgba(245, 158, 11, 0.4)' : 'none' }}>
+                      <Lightbulb size={40} style={{ color: relay1Siren ? '#F59E0B' : 'var(--text-disabled)', fill: relay1Siren ? '#F59E0B' : 'transparent', transition: 'all 0.3s' }} />
                     </div>
                     
                     <div className="text-center relative z-10">
-                      <h3 className="text-[15px] font-bold" style={{ color: relay1Siren ? '#DC2626' : 'var(--text-primary)' }}>Sirene MS-290 (12V)</h3>
+                      <h3 className="text-[15px] font-bold" style={{ color: relay1Siren ? '#D97706' : 'var(--text-primary)' }}>Lampu Indikator (12V)</h3>
                       <p className="text-[11px] text-[var(--text-muted)] mt-1 font-[family-name:var(--font-jetbrains)] uppercase tracking-wider">ESP32 Relay IN1</p>
                     </div>
                     
                     <button 
                       onClick={() => toggleActuator('relay1Siren', !relay1Siren)}
                       className="px-6 py-3 w-full max-w-[200px] rounded-xl font-bold text-[12px] flex items-center justify-center gap-2 transition-all duration-300 relative z-10 shadow-sm hover:scale-105 active:scale-95"
-                      style={{ background: relay1Siren ? '#EF4444' : 'var(--surface-bg)', color: relay1Siren ? 'white' : 'var(--text-primary)', border: `1px solid ${relay1Siren ? '#EF4444' : 'var(--border-strong)'}` }}
+                      style={{ background: relay1Siren ? '#F59E0B' : 'var(--surface-bg)', color: relay1Siren ? 'white' : 'var(--text-primary)', border: `1px solid ${relay1Siren ? '#F59E0B' : 'var(--border-strong)'}` }}
                     >
-                      <Power size={14} className={relay1Siren ? 'animate-pulse' : ''} /> {relay1Siren ? 'MATIKAN SIRENE' : 'NYALAKAN SIRENE'}
+                      <Power size={14} className={relay1Siren ? 'animate-pulse' : ''} /> {relay1Siren ? 'MATIKAN LAMPU' : 'NYALAKAN LAMPU'}
                     </button>
                   </div>
 
-                  {/* Kartu Relay 2 (Lampu) */}
-                  <div className="rounded-xl p-5 flex flex-col items-center gap-4 border-2 transition-all duration-300 relative overflow-hidden" style={{ borderColor: relay2Alarm ? '#F59E0B' : 'var(--border-subtle)', background: relay2Alarm ? '#FFFBEB' : 'var(--surface-card)' }}>
-                    {relay2Alarm && <div className="absolute inset-0 bg-[#F59E0B] opacity-5 animate-pulse" />}
+                  {/* Kartu Relay 2 (Sirene) */}
+                  <div className="rounded-xl p-5 flex flex-col items-center gap-4 border-2 transition-all duration-300 relative overflow-hidden" style={{ borderColor: relay2Alarm ? '#EF4444' : 'var(--border-subtle)', background: relay2Alarm ? '#FEF2F2' : 'var(--surface-card)' }}>
+                    {relay2Alarm && <div className="absolute inset-0 bg-[#EF4444] opacity-5 animate-pulse" />}
                     
-                    <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-inner relative z-10 transition-all duration-300" style={{ background: relay2Alarm ? '#FEF3C7' : 'var(--surface-inset)', boxShadow: relay2Alarm ? '0 0 30px rgba(245, 158, 11, 0.4)' : 'none' }}>
-                      <Lightbulb size={40} style={{ color: relay2Alarm ? '#F59E0B' : 'var(--text-disabled)', fill: relay2Alarm ? '#F59E0B' : 'transparent', transition: 'all 0.3s' }} />
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-inner relative z-10 transition-all duration-300" style={{ background: relay2Alarm ? '#FEE2E2' : 'var(--surface-inset)', boxShadow: relay2Alarm ? '0 0 30px rgba(239, 68, 68, 0.4)' : 'none' }}>
+                      <Siren size={40} style={{ color: relay2Alarm ? '#EF4444' : 'var(--text-disabled)', animation: relay2Alarm ? 'pulse 0.8s infinite' : 'none', transition: 'color 0.3s' }} />
                     </div>
                     
                     <div className="text-center relative z-10">
-                      <h3 className="text-[15px] font-bold" style={{ color: relay2Alarm ? '#D97706' : 'var(--text-primary)' }}>Lampu Indikator (12V)</h3>
+                      <h3 className="text-[15px] font-bold" style={{ color: relay2Alarm ? '#DC2626' : 'var(--text-primary)' }}>Sirene MS-290 (12V)</h3>
                       <p className="text-[11px] text-[var(--text-muted)] mt-1 font-[family-name:var(--font-jetbrains)] uppercase tracking-wider">ESP32 Relay IN2</p>
                     </div>
                     
                     <button 
                       onClick={() => toggleActuator('relay2Alarm', !relay2Alarm)}
                       className="px-6 py-3 w-full max-w-[200px] rounded-xl font-bold text-[12px] flex items-center justify-center gap-2 transition-all duration-300 relative z-10 shadow-sm hover:scale-105 active:scale-95"
-                      style={{ background: relay2Alarm ? '#F59E0B' : 'var(--surface-bg)', color: relay2Alarm ? 'white' : 'var(--text-primary)', border: `1px solid ${relay2Alarm ? '#F59E0B' : 'var(--border-strong)'}` }}
+                      style={{ background: relay2Alarm ? '#EF4444' : 'var(--surface-bg)', color: relay2Alarm ? 'white' : 'var(--text-primary)', border: `1px solid ${relay2Alarm ? '#EF4444' : 'var(--border-strong)'}` }}
                     >
-                      <Power size={14} className={relay2Alarm ? 'animate-pulse' : ''} /> {relay2Alarm ? 'MATIKAN LAMPU' : 'NYALAKAN LAMPU'}
+                      <Power size={14} className={relay2Alarm ? 'animate-pulse' : ''} /> {relay2Alarm ? 'MATIKAN SIRENE' : 'NYALAKAN SIRENE'}
                     </button>
                   </div>
                 </div>
