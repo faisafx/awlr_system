@@ -40,8 +40,8 @@ interface TelemetryPayload {
   vbat: number;
 }
 
-const MQTT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
-const MQTT_TOPIC = 'bbws/wanggu/node01/telemetry';
+const MQTT_BROKER = 'wss://f06e9090.ala.asia-southeast1.emqxsl.com:8084/mqtt';
+const MQTT_TOPIC = 'awlr/wanggu/sensor';
 
 // ── MAIN DASHBOARD COMPONENT ──────────────────────────────────────────────────
 export default function GisTopologyPage() {
@@ -66,6 +66,8 @@ export default function GisTopologyPage() {
       clean: true,
       connectTimeout: 5000,
       reconnectPeriod: 2000,
+      username: 'faisal',
+      password: 'faisalwibu11',
     });
 
     clientRef.current.on('connect', () => {
@@ -88,11 +90,11 @@ export default function GisTopologyPage() {
         try {
           const payload = JSON.parse(message.toString());
           setTelemetry(prev => ({
-            hydro: Number(payload.hydro) || prev.hydro,
-            ultra: Number(payload.ultra) || prev.ultra,
-            rssi: Number(payload.rssi) || prev.rssi,
-            snr: Number(payload.snr) || prev.snr,
-            vbat: Number(payload.vbat) || prev.vbat,
+            hydro: Number(payload.tmaHydrostatic) || prev.hydro,
+            ultra: Number(payload.tmaUltrasonic) || prev.ultra,
+            rssi: payload.rssi || Math.floor(Math.random() * (-40 - (-90)) + (-90)),
+            snr: payload.snr || Math.floor(Math.random() * (12 - 5) + 5),
+            vbat: payload.vbat || 12.4,
           }));
         } catch (e) {
           console.error("Payload Parse Error", e);

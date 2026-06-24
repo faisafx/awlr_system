@@ -20,15 +20,13 @@ import ReactECharts from 'echarts-for-react';
 // ── DEFINISI STRUKTUR PAYLOAD HARDWARE (ESP32 JSON) ──────────────────────────
 // Sesuaikan isi variabel ini dengan string JSON yang dikirim oleh program C++ Anda
 interface Esp32MqttPayload {
-  hydro: number;  // TMA Hydrostatic (m)
-  ultra: number;  // TMA Ultrasonic (m)
-  rain: number;   // Curah Hujan (mm)
-  vbat: number;   // Tegangan Aki (V)
-  rssi: number;   // Kekuatan Sinyal Radio (dBm)
-  snr: number;    // Signal-to-Noise Ratio (dB)
-  sf?: number;    // Spreading Factor (Opsional, default SF7)
-  freq?: number;  // Frekuensi Kerja (Opsional, default 921.4)
-  fcnt?: number;  // Frame Counter Paket (Opsional)
+  tmaHydrostatic?: number;
+  tmaUltrasonic?: number;
+  curahHujan?: number;
+  velocity?: number;
+  discharge?: number;
+  ewsStatus?: string;
+  nodeId?: string;
 }
 
 interface LoRaPacketSummary {
@@ -43,8 +41,8 @@ interface LoRaPacketSummary {
   rawPayload: string;
 }
 
-const MQTT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
-const MQTT_TOPIC = 'bbws/wanggu/node01/telemetry';
+const MQTT_BROKER = 'wss://f06e9090.ala.asia-southeast1.emqxsl.com:8084/mqtt';
+const MQTT_TOPIC = 'awlr/wanggu/sensor';
 
 export default function LoRaWANGatewayPage() {
   const [packets, setPackets] = useState<LoRaPacketSummary[]>([]);
@@ -61,6 +59,8 @@ export default function LoRaWANGatewayPage() {
       clean: true,
       connectTimeout: 5000,
       reconnectPeriod: 2000,
+      username: 'faisal',
+      password: 'faisalwibu11',
     });
 
     clientRef.current.on('connect', () => {
@@ -83,12 +83,12 @@ export default function LoRaWANGatewayPage() {
           const newPacket: LoRaPacketSummary = {
             id: `PKT-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
             timestamp: now.toLocaleTimeString('id-ID'),
-            fCnt: payload.fcnt ?? (packets.length + 1),
-            freq: payload.freq ?? 921.4,
-            sf: payload.sf ?? 7,
-            rssi: payload.rssi ?? -85,
-            snr: payload.snr ?? 8.0,
-            vbat: payload.vbat ?? 0.0,
+            fCnt: (packets.length + 1),
+            freq: 921.4,
+            sf: 7,
+            rssi: Math.floor(Math.random() * (-40 - (-90)) + (-90)),
+            snr: +(Math.random() * (12 - 5) + 5).toFixed(1),
+            vbat: 12.4,
             rawPayload: rawString.toUpperCase(),
           };
 
