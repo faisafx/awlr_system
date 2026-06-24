@@ -585,9 +585,9 @@ Jika operator meminta kirim WA, sertakan tag: [KIRIM_WA: isi pesan]`;
           {/* Model Selector (Kiri Bawah) */}
           <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
             <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)} style={{ background: 'var(--surface-inset)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)', fontSize: '10px', fontWeight: 600, padding: '4px 22px 4px 10px', borderRadius: '8px', outline: 'none', cursor: 'pointer', fontFamily: 'var(--font-jetbrains), monospace', appearance: 'none', backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23888888\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center', backgroundSize: '10px' }}>
-              <option value="gemini-2.0-flash">⚡ Gemini Flash 2.0</option>
-              <option value="gemini-flash-latest">🚀 Gemini Flash</option>
-              <option value="gemini-1.5-pro">🧠 Gemini Pro</option>
+              <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash</option>
+              <option value="gemini-2.5-flash">🚀 Gemini 2.5 Flash</option>
+              <option value="gemini-2.5-pro">🧠 Gemini 2.5 Pro</option>
             </select>
           </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>

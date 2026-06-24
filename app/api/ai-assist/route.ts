@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       parts: [{ text: m.content }]
     }));
 
-    const targetModel = selectedModel || 'gemini-flash-latest';
+    const targetModel = selectedModel || 'gemini-2.0-flash';
 
     const response = await ai.models.generateContent({
       model: targetModel,
@@ -49,11 +49,18 @@ export async function POST(req: Request) {
           formData.append('message', waMessage);
           formData.append('delay', '1');
           
-          await fetch('https://api.fonnte.com/send', {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seconds timeout
+
+          const waResponse = await fetch('https://api.fonnte.com/send', {
             method: 'POST',
             headers: { Authorization: token },
-            body: formData
+            body: formData,
+            signal: controller.signal
           });
+          clearTimeout(timeoutId);
+
+          if (!waResponse.ok) throw new Error('Fonnte API returned ' + waResponse.status);
           
           responseText = responseText.replace(waMatch[0], "\n\n✅ *Berhasil mengirimkan perintah ini ke grup WhatsApp warga.*");
         } else {
@@ -69,8 +76,11 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('Gemini Error:', error);
     if (error?.status === 429) {
-      return NextResponse.json({ content: "⚠️ Kuota API gratis telah habis atau limit rate tercapai (Error 429). Silakan tunggu sebentar lalu coba lagi, atau pilih model AI yang lain di pengaturan atas." }, { status: 200 });
+      return NextResponse.json({ content: "⚠️ Kuota API gratis telah habis atau limit rate tercapai (Error 429). Silakan tunggu sebentar lalu coba lagi." }, { status: 200 });
     }
-    return NextResponse.json({ content: "⚠️ Maaf, mesin AI sedang mengalami gangguan saat menganalisis data. Silakan coba lagi." }, { status: 200 });
+    if (error?.status === 503) {
+      return NextResponse.json({ content: "⚠️ Server Google Gemini sedang penuh (High Demand). Silakan coba lagi dalam beberapa detik." }, { status: 200 });
+    }
+    return NextResponse.json({ content: "⚠️ Maaf, mesin AI sedang mengalami gangguan koneksi ke server Google. Silakan coba model lain atau cek koneksi." }, { status: 200 });
   }
 }
