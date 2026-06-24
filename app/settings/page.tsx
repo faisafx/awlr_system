@@ -60,18 +60,23 @@ export default function GlobalSettingsPage() {
   const [relay2Alarm, setRelay2Alarm] = useState(false);
   const [mqttStatus, setMqttStatus] = useState<'DISCONNECTED' | 'CONNECTED'>('DISCONNECTED');
 
-  // Efek untuk memuat state aktuator dari localStorage saat pertama dimuat
+  // Efek untuk memuat state aktuator & threshold dari localStorage saat pertama dimuat
   useEffect(() => {
     const savedRelay1 = localStorage.getItem('relay1_state');
     const savedRelay2 = localStorage.getItem('relay2_state');
     if (savedRelay1 !== null) setRelay1Siren(savedRelay1 === 'true');
     if (savedRelay2 !== null) setRelay2Alarm(savedRelay2 === 'true');
+
+    const s1 = localStorage.getItem('siaga1_thres');
+    const s2 = localStorage.getItem('siaga2_thres');
+    const s3 = localStorage.getItem('siaga3_thres');
+    if (s1 !== null) setSiaga1(Number(s1));
+    if (s2 !== null) setSiaga2(Number(s2));
+    if (s3 !== null) setSiaga3(Number(s3));
   }, []);
 
-  // Efek untuk koneksi MQTT background khusus untuk pengujian aktuator
+  // Efek untuk koneksi MQTT background (digunakan untuk Aktuator & Config Push)
   useEffect(() => {
-    if (activeSection !== 'ACTUATOR') return;
-    
     // Gunakan kredensial yang ada di state atau localStorage
     const broker = mqttHost;
     const clientId = `awlr-setting-${Math.random().toString(16).substring(2, 8)}`;
@@ -135,9 +140,30 @@ export default function GlobalSettingsPage() {
       localStorage.setItem('mqtt_pass', mqttPass);
     }
 
+    if (activeSection === 'THRES') {
+      // Save local
+      localStorage.setItem('siaga1_thres', String(siaga1));
+      localStorage.setItem('siaga2_thres', String(siaga2));
+      localStorage.setItem('siaga3_thres', String(siaga3));
+      
+      // Publish to MQTT
+      if (clientRef.current && clientRef.current.connected) {
+        const payload = JSON.stringify({
+          siaga1: siaga1,
+          siaga2: siaga2,
+          siaga3: siaga3
+        });
+        clientRef.current.publish('awlr/wanggu/config', payload, { qos: 0 });
+      }
+    }
+
     setTimeout(() => {
       setIsSaving(false);
-      alert('Konfigurasi MQTT berhasil diperbarui. Perubahan akan berlaku ketika memuat ulang Dashboard (Halaman Utama).');
+      if (activeSection === 'THRES' && (!clientRef.current || !clientRef.current.connected)) {
+        alert('Konfigurasi tersimpan lokal, namun gagal dikirim ke ESP32 karena MQTT belum terhubung.');
+      } else {
+        alert(`Konfigurasi ${activeSection} berhasil diperbarui dan diterapkan.`);
+      }
     }, 800);
   };
 
