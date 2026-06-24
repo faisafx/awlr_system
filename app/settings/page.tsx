@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Settings, Save, Sliders, Radio, Globe, ShieldAlert, 
   Database, RefreshCw, Lock, TerminalSquare, ShieldCheck,
