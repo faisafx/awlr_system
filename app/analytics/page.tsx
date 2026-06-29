@@ -123,14 +123,14 @@ function PanelHeader({ title, subtitle, action }: { title: string; subtitle: str
 }
 
 // ── Model Health Strip ────────────────────────────────────────────────────────
-function ModelHealthStrip({ mae, rmse, execMs }: { mae: number; rmse: number; execMs: number }) {
+function ModelHealthStrip({ mae, rmse, execMs, unit }: { mae: number; rmse: number; execMs: number, unit: string }) {
   const maeScore   = Math.max(0, 1 - mae / 0.5);
   const rmseScore  = Math.max(0, 1 - rmse / 0.5);
   const speedScore = Math.min(1, 1000 / Math.max(execMs, 1));
 
   const metrics = [
-    { label: 'MAE',             value: `${mae.toFixed(3)} m`,  score: maeScore,   color: '#8B5CF6', icon: Sigma },
-    { label: 'RMSE',            value: `${rmse.toFixed(3)} m`, score: rmseScore,  color: '#3B82F6', icon: BarChart2 },
+    { label: 'MAE',             value: `${mae.toFixed(3)} ${unit}`,  score: maeScore,   color: '#8B5CF6', icon: Sigma },
+    { label: 'RMSE',            value: `${rmse.toFixed(3)} ${unit}`, score: rmseScore,  color: '#3B82F6', icon: BarChart2 },
     { label: 'Waktu Inferensi', value: `${execMs} ms`,         score: speedScore, color: '#10B981', icon: Clock4 },
   ];
 
@@ -398,7 +398,7 @@ function PredictionDashboardBlock({
       <div>
         <SectionHeader>Diagnostik Model & Proyeksi Horizon ({label})</SectionHeader>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '16px' }}>
-          <ModelHealthStrip mae={data.metrics.mae} rmse={data.metrics.rmse} execMs={data.metrics.executionTimeMs} />
+          <ModelHealthStrip mae={data.metrics.mae} rmse={data.metrics.rmse} execMs={data.metrics.executionTimeMs} unit={unit} />
           <ConfidenceHorizonCard forecast={data.forecast} type={type} unit={unit} />
         </div>
       </div>
