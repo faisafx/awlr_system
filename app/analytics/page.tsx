@@ -11,21 +11,28 @@
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import {
-  BrainCircuit,
   TrendingUp,
-  AlertTriangle,
-  ShieldCheck,
-  ChevronRight,
+  BrainCircuit,
+  Database,
   Activity,
-  Cpu,
   Layers,
+  Zap,
+  Clock,
+  MapPin,
+  ChevronRight,
+  Droplet,
+  Waves,
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  Sparkles,
+  Sigma,
   BarChart2,
   Clock4,
-  Sigma,
-  Sparkles,
-  Droplet,
-  Waves
+  Cpu,
+  ShieldCheck
 } from 'lucide-react';
+import LstmPredictWidget from '@/components/LstmPredictWidget';
 import { cn } from '@/lib/utils';
 
 // ── Shared Spinner ────────────────────────────────────────────────────────────
@@ -511,6 +518,14 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </div>
+
+      {/* ── AI FORECAST WIDGET ── */}
+      {data && (
+        <LstmPredictWidget 
+          currentDischarge={data.debit.historical.length > 0 ? data.debit.historical[data.debit.historical.length - 1].value : 0} 
+          currentRain={0} // Mocked or get from somewhere if available
+        />
+      )}
 
       {/* ── PREDICTION BLOCKS ── */}
       {data && (
