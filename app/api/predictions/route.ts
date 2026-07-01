@@ -95,8 +95,8 @@ export async function GET() {
       historyForAI.unshift(historyForAI.length > 0 ? historyForAI[0] : [0,0]); 
     }
 
-    // 3. Tembak ke Python AI Server
-    let aiDebitPrediction = 0;
+    // 3. Tembak ke Python AI Server (Minta Prediksi 14 Jam Autoregresif)
+    let aiDebitPredictions: number[] = [];
     try {
       const pyServer = process.env.AI_SERVER_URL || 'http://127.0.0.1:5000';
       const pyResponse = await fetch(`${pyServer}/predict`, {
@@ -106,25 +106,30 @@ export async function GET() {
       });
       if (pyResponse.ok) {
         const aiData = await pyResponse.json();
-        aiDebitPrediction = aiData.prediksi_debit_air;
+        aiDebitPredictions = aiData.prediksi_debit_air_14_jam || [];
       }
     } catch (e) {
       console.warn("AI Server is unreachable, using fallback for debit prediction", e);
-      aiDebitPrediction = historicalDebit.length > 0 ? historicalDebit[historicalDebit.length - 1].value + 1.2 : 45.0;
+    }
+    
+    // Fallback jika AI gagal atau panjang tidak sesuai
+    if (aiDebitPredictions.length !== 14) {
+      const base = historicalDebit.length > 0 ? historicalDebit[historicalDebit.length - 1].value : 45.0;
+      aiDebitPredictions = Array.from({ length: 14 }, (_, i) => base + (i * 0.5));
     }
 
-    // 4. Bangun Forecast Array (6 Jam/Step ke Depan)
+    // 4. Bangun Forecast Array (14 Jam/Step ke Depan)
     const lastTimestamp = sortedLogs.length > 0 ? sortedLogs[sortedLogs.length - 1].timestamp.getTime() : Date.now();
     const forecastDebit = [];
     const forecastTMA = [];
     
     // Asumsi jarak antar data adalah 1 Jam (3600000 ms)
-    for (let i = 1; i <= 6; i++) {
+    for (let i = 1; i <= 14; i++) {
       const t = lastTimestamp + (i * 60 * 60 * 1000);
       
-      // Debit: Interpolasi perlahan menuju prediksi AI di jam ke-6, atau fluktuasi
-      const valDebit = Math.max(0, aiDebitPrediction + (Math.random() * 0.2 - 0.1)); // Tambah noise kecil, jangan sampai minus
-      const spreadDebit = i * 0.15; // Persebaran (Confidence Interval) jauh lebih masuk akal
+      // Debit: Ambil langsung dari hasil array Autoregressive AI
+      const valDebit = Math.max(0, aiDebitPredictions[i - 1]); 
+      const spreadDebit = i * 0.15; // Persebaran (Confidence Interval)
       
       forecastDebit.push({
         timestamp: t,

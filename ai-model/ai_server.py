@@ -49,28 +49,32 @@ class SensorData(BaseModel):
 @app.post("/predict")
 def predict_debit(data: SensorData):
     if len(data.history_14_days) != 14:
-        raise HTTPException(status_code=400, detail="Data harus berisi tepat 14 hari terakhir!")
+        raise HTTPException(status_code=400, detail="Data harus berisi tepat 14 langkah terakhir!")
     
-    # 1. Konversi data JSON dari Next.js menjadi Numpy Array
     input_mentah = np.array(data.history_14_days)
-    
-    # 2. Pura-pura membuat dataframe atau langsung di-scale
-    # Bentuk input_mentah adalah (14, 2). Kita scale pakai scaler_fitur
     input_scaled = scaler_fitur.transform(input_mentah)
+    current_input = input_scaled.reshape(1, 14, 2)
     
-    # 3. Bentuk menjadi format 3D untuk LSTM: (1 Sample, 14 Timesteps, 2 Features)
-    input_3d = input_scaled.reshape(1, 14, 2)
+    predictions = []
     
-    # 4. Berpikir & Memprediksi!
-    prediksi_scaled = model.predict(input_3d)
+    # Autoregressive Forecasting: Loop 14 Kali
+    for _ in range(14):
+        # 1. Prediksi 1 langkah ke depan
+        pred_scaled = model.predict(current_input, verbose=0)
+        pred_asli = float(scaler_target.inverse_transform(pred_scaled)[0][0])
+        predictions.append(pred_asli)
+        
+        # 2. Buat fitur masa depan buatan (Debit = Prediksi, Hujan = 0)
+        fitur_baru_mentah = np.array([[pred_asli, 0.0]])
+        fitur_baru_scaled = scaler_fitur.transform(fitur_baru_mentah)
+        fitur_baru_3d = fitur_baru_scaled.reshape(1, 1, 2)
+        
+        # 3. Geser jendela: Buang data terlama, masukkan prediksi baru
+        current_input = np.append(current_input[:, 1:, :], fitur_baru_3d, axis=1)
     
-    # 5. Kembalikan ke angka Debit Air nyata (m3/detik)
-    prediksi_asli = scaler_target.inverse_transform(prediksi_scaled)
-    
-    # 6. Kirim jawaban kembali ke Next.js
     return {
         "status": "success",
-        "prediksi_debit_air": float(prediksi_asli[0][0])
+        "prediksi_debit_air_14_jam": predictions
     }
 
 if __name__ == "__main__":
